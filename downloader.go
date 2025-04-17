@@ -12,11 +12,19 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 )
 
+// Example URL to access BTTV cdn for image:
 // https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
 var (
 	bttvAPIVersion = "3"
+
+	EmoteProviders = []string{
+		"BTTV",
+		"7TV",
+		"FFZ",
+	}
 )
 
 // Used to unmarshal errors from an API response
@@ -25,12 +33,10 @@ type jsonError struct {
 		Message string `json:"message"`
 	} `json:"error"`
 }
-type EmoteDownloader struct {
-	Emotes []Emote
-}
 
 // BTTV format for now.
 type Emote struct {
+	Provider  string
 	ID        string `json:"id"`
 	Code      string `json:"code"`
 	ImageType string `json:"imageType"`
@@ -38,7 +44,43 @@ type Emote struct {
 	UserID    string `json:"userId"`
 }
 
-func (ed *EmoteDownloader) GetBTTVGlobalEmotes() error {
+type EmoteDownloader struct {
+	Emotes []Emote
+}
+
+func (ed *EmoteDownloader) Download() error {
+	var err error
+
+	emotesChan := make(chan []Emote, 4)
+	errorChan := make(chan error, 4)
+
+	done := make(chan struct{}, 1)
+
+	go func() {
+		bttvEmotes, err := getBTTVGlobalEmotes()
+		emotesChan <- bttvEmotes
+		errorChan <- err
+
+		close(done)
+	}()
+
+	<-done
+
+	close(emotesChan)
+	close(errorChan)
+
+	for e := range errorChan {
+		err = errors.Join(e)
+	}
+
+	for emotes := range emotesChan {
+		ed.Emotes = slices.Concat(emotes)
+	}
+
+	return err
+}
+
+func getBTTVGlobalEmotes() ([]Emote, error) {
 	req := &http.Request{
 		Method: "GET",
 		URL: &url.URL{
@@ -53,29 +95,33 @@ func (ed *EmoteDownloader) GetBTTVGlobalEmotes() error {
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if response.StatusCode != http.StatusOK {
 		errorMessage := &jsonError{}
 		err = json.Unmarshal(body, errorMessage)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return errors.New(errorMessage.Error.Message)
+		return nil, errors.New(errorMessage.Error.Message)
 	}
 
-	// TEMP unmarshal directly into downloader synchronously
-	err = json.Unmarshal(body, &ed.Emotes)
+	bttvEmotes := []Emote{}
+	err = json.Unmarshal(body, &bttvEmotes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	for i, _ := range bttvEmotes {
+		bttvEmotes[i].Provider = "BTTV"
+	}
+
+	return bttvEmotes, nil
 }
