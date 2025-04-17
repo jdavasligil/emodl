@@ -1,6 +1,5 @@
 // TODO:
 // - Create universal interface for all emotes
-// - Asynchronously make requests to each provider
 // - Obtain emote image data as well?
 // - Provide a stream (iterator) for digesting emotes
 
@@ -13,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"sync"
 )
 
 // Example URL to access BTTV cdn for image:
@@ -54,17 +54,18 @@ func (ed *EmoteDownloader) Download() error {
 	emotesChan := make(chan []Emote, 4)
 	errorChan := make(chan error, 4)
 
-	done := make(chan struct{}, 1)
+	var wg sync.WaitGroup
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		bttvEmotes, err := getBTTVGlobalEmotes()
 		emotesChan <- bttvEmotes
 		errorChan <- err
-
-		close(done)
 	}()
 
-	<-done
+	wg.Wait()
 
 	close(emotesChan)
 	close(errorChan)
