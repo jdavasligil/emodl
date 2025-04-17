@@ -1,0 +1,34 @@
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Go
+/bin/
+/pkg/
+/vendor/
+
+# Compiled binary outputs
+*.exe
+*.exe~
+*.out
+*.test
+
+# Dependency directories
+/vendor/
+!vendor/**/*.go
+
+# Log files
+*.log
+
+# Environment variables
+.env
+
+# Ignore local .env files
+.env*
+
+# Miscellaneous
