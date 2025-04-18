@@ -1,22 +1,34 @@
 // TODO:
-// - Create universal interface for all emotes
+// - Create universal interface for all emotes? Or keep each type separate?
 // - Obtain emote image data as well?
-// - Provide a stream (iterator) for digesting emotes
+// - Provide a stream (iterator) for digesting emote images in batches
 
 package emotedownloader
 
 import (
 	"errors"
+	"image"
+	"io"
+	"iter"
+	"log"
 	"net/http"
 	"net/url"
 	"slices"
 	"sync"
 
+	"golang.org/x/image/webp"
+
 	"github.com/mailru/easyjson"
 )
 
-// Example URL to access BTTV cdn for image:
-// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
+type ImageScale string
+
+const (
+	ImageScale1X ImageScale = "1x"
+	ImageScale2X            = "2x"
+	ImageScale3X            = "3x"
+)
+
 var (
 	bttvAPIVersion = "3"
 
@@ -51,8 +63,12 @@ type BTTVEmote struct {
 //easyjson:json
 type BTTVEmotes []BTTVEmote
 
+// TODO:
+// - Create with options to supply providers and broadcaster_id
+// - Obtain broadcaster custom emotes as well
 type EmoteDownloader struct {
 	BTTVEmotes
+	Err error
 }
 
 // Download and collect the emote data from each provider.
@@ -85,23 +101,82 @@ func (ed *EmoteDownloader) Download() error {
 	}
 
 	for emotes := range emotesChan {
+		// TODO: Reduce allocations here
 		ed.BTTVEmotes = slices.Concat(emotes)
 	}
 
 	return err
 }
 
-// Returns a function which can be repeatedly called to obtain a batch of emote images.
-func (ed *EmoteDownloader) ImageIterator() func() {
-	return func() {
+// TODO: proper pooling and decoding of webp images asynchronously
+
+// Returns a single-use iterator yielding batches of images for emotes.
+// Errors can be checked by calling .Err() on the EmoteDownloader.
+func (ed *EmoteDownloader) BTTVImages(imageScale ImageScale) iter.Seq2[string, []image.Image] {
+	return func(yield func(string, []image.Image) bool) {
+		// TODO: use waitgroup to batch async calls and iterate in chunks
+		// We are currently running requests in series which is very slow
+		for _, e := range ed.BTTVEmotes {
+			id := e.ID
+			batch := make([]image.Image, 0, 2)
+			r, err := getBTTVEmoteImageData(id, imageScale)
+			if err != nil {
+				ed.Err = err
+				return
+			}
+			img, err := webp.Decode(r)
+			if err != nil {
+				ed.Err = err
+				return
+			}
+
+			r.Close()
+
+			batch = append(batch, img)
+			if batch == nil {
+				ed.Err = errors.New("Batch can not be nil.")
+				return
+			}
+
+			if !yield(e.ID, batch) {
+				return
+			}
+		}
 		// obtain batch of images in bulk
-		// Security consideration: caution with decoding potentially large images: https://pkg.go.dev/image
 		// keep track of current emote idx
 		// track error in ed
-		// write image data to buffer
-		// how to properly deserialize images based on type?
-		// associate emote id to image?
 	}
+}
+
+// Caller is responsible for closing reader
+func getBTTVEmoteImageData(imageID string, imageScale ImageScale) (io.ReadCloser, error) {
+	// Example URL to access BTTV cdn for image:
+	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
+	req := &http.Request{
+		Method: "GET",
+		URL: &url.URL{
+			Scheme: "https",
+			Host:   "cdn.betterttv.net",
+			Path:   "/emote/" + imageID + "/" + string(imageScale) + ".webp",
+		},
+		Header: http.Header{},
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		errorMessage := &jsonError{}
+		err = easyjson.UnmarshalFromReader(response.Body, errorMessage)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(errorMessage.Error.Message)
+	}
+
+	return response.Body, nil
 }
 
 func getBTTVGlobalEmotes() (BTTVEmotes, error) {
