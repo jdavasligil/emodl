@@ -12,13 +12,13 @@ func TestDownloader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ed.Emotes) == 0 {
+	if len(ed.BTTVEmotes) == 0 {
 		t.Fatal("Emotes is empty.")
 	}
-	if !slices.Contains(EmoteProviders, ed.Emotes[0].Provider) {
+	if !slices.Contains(EmoteProviders, ed.BTTVEmotes[0].Provider) {
 		t.Fatal("Provider not recognized.")
 	}
-	//s, err := prettyPrint(ed.Emotes)
+	//s, err := prettyPrint(ed.BTTVEmotes)
 	//if err != nil {
 	//	t.Fatal(err)
 	//}

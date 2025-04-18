@@ -6,15 +6,13 @@
 package emotedownloader
 
 import (
-	"bufio"
-	"bytes"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
 	"sync"
+
+	"github.com/mailru/easyjson"
 )
 
 // Example URL to access BTTV cdn for image:
@@ -30,6 +28,8 @@ var (
 )
 
 // Used to unmarshal errors from an API response
+//
+//easyjson:json
 type jsonError struct {
 	Error struct {
 		Message string `json:"message"`
@@ -37,24 +37,29 @@ type jsonError struct {
 }
 
 // BTTV format for now.
-type Emote struct {
+//
+//easyjson:json
+type BTTVEmote struct {
 	Provider  string
 	ID        string `json:"id"`
 	Code      string `json:"code"`
-	ImageType string `json:"imageType"`
+	ImageType string `json:"imageType,intern"`
 	Animated  bool   `json:"animated"`
-	UserID    string `json:"userId"`
+	UserID    string `json:"userId,intern"`
 }
 
+//easyjson:json
+type BTTVEmotes []BTTVEmote
+
 type EmoteDownloader struct {
-	Emotes []Emote
+	BTTVEmotes
 }
 
 // Download and collect the emote data from each provider.
 func (ed *EmoteDownloader) Download() error {
 	var err error
 
-	emotesChan := make(chan []Emote, 4)
+	emotesChan := make(chan BTTVEmotes, 4)
 	errorChan := make(chan error, 4)
 
 	var wg sync.WaitGroup
@@ -80,16 +85,17 @@ func (ed *EmoteDownloader) Download() error {
 	}
 
 	for emotes := range emotesChan {
-		ed.Emotes = slices.Concat(emotes)
+		ed.BTTVEmotes = slices.Concat(emotes)
 	}
 
 	return err
 }
 
 // Returns a function which can be repeatedly called to obtain a batch of emote images.
-func (ed *EmoteDownloader) ImageIterator(buf *bytes.Buffer) func() {
+func (ed *EmoteDownloader) ImageIterator() func() {
 	return func() {
 		// obtain batch of images in bulk
+		// Security consideration: caution with decoding potentially large images: https://pkg.go.dev/image
 		// keep track of current emote idx
 		// track error in ed
 		// write image data to buffer
@@ -98,7 +104,7 @@ func (ed *EmoteDownloader) ImageIterator(buf *bytes.Buffer) func() {
 	}
 }
 
-func getBTTVGlobalEmotes() ([]Emote, error) {
+func getBTTVGlobalEmotes() (BTTVEmotes, error) {
 	req := &http.Request{
 		Method: "GET",
 		URL: &url.URL{
@@ -117,22 +123,17 @@ func getBTTVGlobalEmotes() ([]Emote, error) {
 	}
 	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	if response.StatusCode != http.StatusOK {
 		errorMessage := &jsonError{}
-		err = json.Unmarshal(body, errorMessage)
+		err = easyjson.UnmarshalFromReader(response.Body, errorMessage)
 		if err != nil {
 			return nil, err
 		}
 		return nil, errors.New(errorMessage.Error.Message)
 	}
 
-	bttvEmotes := []Emote{}
-	err = json.Unmarshal(body, &bttvEmotes)
+	bttvEmotes := BTTVEmotes{}
+	err = easyjson.UnmarshalFromReader(response.Body, &bttvEmotes)
 	if err != nil {
 		return nil, err
 	}
