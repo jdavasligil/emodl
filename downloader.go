@@ -6,6 +6,8 @@
 package emotedownloader
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -48,6 +50,7 @@ type EmoteDownloader struct {
 	Emotes []Emote
 }
 
+// Download and collect the emote data from each provider.
 func (ed *EmoteDownloader) Download() error {
 	var err error
 
@@ -65,8 +68,10 @@ func (ed *EmoteDownloader) Download() error {
 		errorChan <- err
 	}()
 
+	// Block until all requests finish.
 	wg.Wait()
 
+	// Channels must be closed to iterate over their contents.
 	close(emotesChan)
 	close(errorChan)
 
@@ -79,6 +84,18 @@ func (ed *EmoteDownloader) Download() error {
 	}
 
 	return err
+}
+
+// Returns a function which can be repeatedly called to obtain a batch of emote images.
+func (ed *EmoteDownloader) ImageIterator(buf *bytes.Buffer) func() {
+	return func() {
+		// obtain batch of images in bulk
+		// keep track of current emote idx
+		// track error in ed
+		// write image data to buffer
+		// how to properly deserialize images based on type?
+		// associate emote id to image?
+	}
 }
 
 func getBTTVGlobalEmotes() ([]Emote, error) {
