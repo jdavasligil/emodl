@@ -26,21 +26,26 @@ func TestDownloader(t *testing.T) {
 
 	t.Run("TestBTTVImages", func(t *testing.T) {
 		imgIter := ed.BTTVImages(ImageScale1X)
-		for id, img := range imgIter {
+		for batch := range imgIter {
 			if ed.Err != nil {
 				t.Fatal(ed.Err)
 			}
-			if img == nil {
-				t.Fatal("Nil image batch.")
-			}
-			if len(img) == 0 {
-				t.Fatal("No image batch.")
-			}
-			batch := img[0]
 			if batch == nil {
-				t.Fatal("Nil batch")
+				t.Fatal("Nil batch.")
 			}
-			t.Logf("ID: %s\tH: %d\tW: %d", id, batch.Bounds().Dy(), batch.Bounds().Dx())
+			if len(batch) == 0 {
+				t.Fatal("Batch length is 0.")
+			}
+			if batch[0].Image == nil {
+				t.Fatal("Nil image.")
+			}
+			if batch[0].ID == "" {
+				t.Fatal("Empty ID.")
+			}
+			t.Logf("ID: %s\tH: %d\tW: %d", batch[0].ID, batch[0].Image.Bounds().Dy(), batch[0].Image.Bounds().Dx())
+		}
+		if ed.Err != nil {
+			t.Fatal(ed.Err)
 		}
 	})
 }

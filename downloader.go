@@ -16,7 +16,11 @@ import (
 	"slices"
 	"sync"
 
-	"golang.org/x/image/webp"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
+	_ "golang.org/x/image/webp"
 
 	"github.com/mailru/easyjson"
 )
@@ -28,6 +32,8 @@ const (
 	ImageScale2X            = "2x"
 	ImageScale3X            = "3x"
 )
+
+const BatchSize = 32
 
 var (
 	bttvAPIVersion = "3"
@@ -46,6 +52,11 @@ type jsonError struct {
 	Error struct {
 		Message string `json:"message"`
 	} `json:"error"`
+}
+
+type ImageIDPair struct {
+	ID    string
+	Image image.Image
 }
 
 // BTTV format for now.
@@ -110,48 +121,84 @@ func (ed *EmoteDownloader) Download() error {
 
 // TODO: proper pooling and decoding of webp images asynchronously
 
-// Returns a single-use iterator yielding batches of images for emotes.
+// Returns a single-use iterator yielding batches of id, image pairs for emotes.
 // Errors can be checked by calling .Err() on the EmoteDownloader.
-func (ed *EmoteDownloader) BTTVImages(imageScale ImageScale) iter.Seq2[string, []image.Image] {
-	return func(yield func(string, []image.Image) bool) {
-		// TODO: use waitgroup to batch async calls and iterate in chunks
-		// We are currently running requests in series which is very slow
-		for _, e := range ed.BTTVEmotes {
-			id := e.ID
-			batch := make([]image.Image, 0, 2)
-			r, err := getBTTVEmoteImageData(id, imageScale)
-			if err != nil {
-				ed.Err = err
-				return
+func (ed *EmoteDownloader) BTTVImages(imageScale ImageScale) iter.Seq[[]ImageIDPair] {
+	return func(yield func([]ImageIDPair) bool) {
+		emoteCount := len(ed.BTTVEmotes)
+		log.Println("Emote Count:", emoteCount)
+		batchCount := emoteCount / BatchSize
+		log.Println("Batch Count:", batchCount)
+		if emoteCount%BatchSize != 0 {
+			batchCount++
+		}
+		log.Println("Batch Count:", batchCount)
+		imgChan := make(chan ImageIDPair, BatchSize)
+		defer close(imgChan)
+
+		for i := range batchCount {
+			var wg sync.WaitGroup
+
+			log.Println("i:", i)
+			for j := i * BatchSize; j < min((i+1)*BatchSize, emoteCount); j++ {
+				log.Println("j:", j)
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+
+					id := ed.BTTVEmotes[j].ID
+					r, err := getBTTVEmoteImageData(id, imageScale)
+					defer r.Close()
+					if err != nil {
+						ed.Err = errors.Join(ed.Err, err)
+						return
+					}
+
+					img, _, err := image.Decode(r)
+					if err != nil {
+						ed.Err = errors.Join(ed.Err, err)
+						return
+					}
+
+					imgChan <- ImageIDPair{Image: img, ID: id}
+				}()
 			}
-			img, err := webp.Decode(r)
-			if err != nil {
-				ed.Err = err
+
+			wg.Wait()
+
+			if ed.Err != nil {
+				log.Println(ed.Err)
 				return
 			}
 
-			r.Close()
-
-			batch = append(batch, img)
-			if batch == nil {
-				ed.Err = errors.New("Batch can not be nil.")
-				return
+			batch := make([]ImageIDPair, 0, BatchSize)
+			for len(imgChan) > 0 {
+				batch = append(batch, <-imgChan)
 			}
-
-			if !yield(e.ID, batch) {
+			if !yield(batch) {
 				return
 			}
 		}
-		// obtain batch of images in bulk
-		// keep track of current emote idx
-		// track error in ed
 	}
 }
+
+//func decodeImage(r io.Reader) (image.Image, error) {
+//	img, err := webp.Decode(r)
+//
+//	if err == nil {
+//		return img, nil
+//	}
+//
+//	log.Println("ERROR", err)
+//	img, _, err = image.Decode(r)
+//
+//	return nil, err
+//}
 
 // Caller is responsible for closing reader
 func getBTTVEmoteImageData(imageID string, imageScale ImageScale) (io.ReadCloser, error) {
 	// Example URL to access BTTV cdn for image:
-	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
+	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/3x.webp
 	req := &http.Request{
 		Method: "GET",
 		URL: &url.URL{
