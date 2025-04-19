@@ -6,9 +6,13 @@ import (
 )
 
 func TestDownloader(t *testing.T) {
+	t.Parallel()
 	ed := NewEmoteDownloader(&EmoteDownloaderConfig{
 		BTTV: true,
 	})
+	if ed == nil {
+		t.Fatal("Nil downloader")
+	}
 	err := ed.Load()
 	if err != nil {
 		t.Fatal(err)
@@ -16,11 +20,11 @@ func TestDownloader(t *testing.T) {
 	if len(ed.BTTVEmotes) == 0 {
 		t.Fatal("Emotes is empty.")
 	}
-	s, err := prettyPrint(ed.BTTVEmotes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(s)
+	//s, err := prettyPrint(ed.BTTVEmotes)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(s)
 }
 
 func prettyPrint(v any) (string, error) {

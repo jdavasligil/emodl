@@ -105,13 +105,13 @@ func easyjson515ca9ccDecodeGithubComJdavasligilEmoteDownloader1(in *jlexer.Lexer
 		case "id":
 			out.ID = string(in.String())
 		case "code":
-			out.Code = string(in.String())
+			out.Name = string(in.String())
 		case "imageType":
-			out.ImageType = string(in.String())
+			out.ImageType = string(in.StringIntern())
 		case "animated":
 			out.Animated = bool(in.Bool())
 		case "userId":
-			out.UserID = string(in.String())
+			out.UserID = string(in.StringIntern())
 		default:
 			in.SkipRecursive()
 		}
@@ -134,7 +134,7 @@ func easyjson515ca9ccEncodeGithubComJdavasligilEmoteDownloader1(out *jwriter.Wri
 	{
 		const prefix string = ",\"code\":"
 		out.RawString(prefix)
-		out.String(string(in.Code))
+		out.String(string(in.Name))
 	}
 	{
 		const prefix string = ",\"imageType\":"

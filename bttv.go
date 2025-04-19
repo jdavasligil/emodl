@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	// BTTV EMOTE URL
-	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
 	bttvAPIVersion = "3"
 	bttvHost       = "api.betterttv.net"
+	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
+	bttvCDN = "cdn.betterttv.net"
 )
 
 //easyjson:json
@@ -22,10 +22,10 @@ type BTTVEmoteSlice []BTTVEmote
 
 type BTTVEmote struct {
 	ID        string `json:"id"`
-	Code      string `json:"code"`
-	ImageType string `json:"imageType"`
+	Name      string `json:"code"`
+	ImageType string `json:"imageType,intern"`
 	Animated  bool   `json:"animated"`
-	UserID    string `json:"userId"`
+	UserID    string `json:"userId,intern"`
 }
 
 func getGlobalBTTVEmotes() ([]BTTVEmote, error) {
@@ -54,22 +54,21 @@ func getGlobalBTTVEmotes() ([]BTTVEmote, error) {
 	}
 	defer response.Body.Close()
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	if response.StatusCode != http.StatusOK {
 		errorMessage := &jsonError{}
-		err = easyjson.Unmarshal(body, errorMessage)
+		err = easyjson.UnmarshalFromReader(response.Body, errorMessage)
 		if err != nil {
-			return nil, err
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				return nil, err
+			}
+			return nil, errors.New(response.Status + "\n" + string(body))
 		}
 		return nil, errors.New(errorMessage.Error.Message)
 	}
 
 	bttvBTTVEmotes := BTTVEmoteSlice{}
-	err = easyjson.Unmarshal(body, &bttvBTTVEmotes)
+	err = easyjson.UnmarshalFromReader(response.Body, &bttvBTTVEmotes)
 	if err != nil {
 		return nil, err
 	}

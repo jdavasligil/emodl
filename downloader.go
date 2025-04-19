@@ -14,11 +14,6 @@ import (
 )
 
 var (
-	// https://github.com/SevenTV/API/blob/main/internal/api/rest/v3/docs/swagger.json
-	// https://cdn.7tv.app/emote/01F6MQ33FG000FFJ97ZB8MWV52/3x.avif
-	sevenTVAPIVersion = "v3"
-	sevenTVHost       = "7tv.io"
-
 	apiPathTmpl, _   = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
 	emotePathTmpl, _ = template.New("emote").Parse("emote/{{ .ID }}/{{ .Scale }}.{{ .Ext }}")
 )
@@ -32,10 +27,6 @@ type emotePath struct {
 type apiPath struct {
 	Version string
 	Path    string
-}
-
-// https://7tv.io/v3/emote-sets/global
-type SevenTVEmote struct {
 }
 
 type FFZEmote struct {
@@ -86,7 +77,7 @@ func (ed *EmoteDownloader) Load() error {
 		}
 
 		for _, e := range bttvEmotes {
-			ed.BTTVEmotes[e.Code] = e
+			ed.BTTVEmotes[e.Name] = e
 		}
 	}()
 
