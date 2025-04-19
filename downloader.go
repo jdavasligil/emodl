@@ -1,57 +1,76 @@
 // TODO:
-// - Create universal interface for all emotes
-// - Obtain emote image data as well?
-// - Provide a stream (iterator) for digesting emotes
+// - Create interface for all emotes and badges
+// - Get URL from Name
+
+// Reference:
+// https://github.com/SevenTV/chatterino7/blob/chatterino7/src/providers/seventv/SeventvAPI.cpp
 
 package emotedownloader
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
-	"net/url"
-	"slices"
 	"sync"
+	"text/template"
 )
 
-// Example URL to access BTTV cdn for image:
-// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
 var (
-	bttvAPIVersion = "3"
+	// https://github.com/SevenTV/API/blob/main/internal/api/rest/v3/docs/swagger.json
+	// https://cdn.7tv.app/emote/01F6MQ33FG000FFJ97ZB8MWV52/3x.avif
+	sevenTVAPIVersion = "v3"
+	sevenTVHost       = "7tv.io"
 
-	EmoteProviders = []string{
-		"BTTV",
-		"7TV",
-		"FFZ",
-	}
+	apiPathTmpl, _   = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
+	emotePathTmpl, _ = template.New("emote").Parse("emote/{{ .ID }}/{{ .Scale }}.{{ .Ext }}")
 )
 
-// Used to unmarshal errors from an API response
-type jsonError struct {
-	Error struct {
-		Message string `json:"message"`
-	} `json:"error"`
+type emotePath struct {
+	ID    string
+	Scale string
+	Ext   string
 }
 
-// BTTV format for now.
-type Emote struct {
-	Provider  string
-	ID        string `json:"id"`
-	Code      string `json:"code"`
-	ImageType string `json:"imageType"`
-	Animated  bool   `json:"animated"`
-	UserID    string `json:"userId"`
+type apiPath struct {
+	Version string
+	Path    string
+}
+
+// https://7tv.io/v3/emote-sets/global
+type SevenTVEmote struct {
+}
+
+type FFZEmote struct {
+}
+
+type EmoteDownloaderConfig struct {
+	BTTV    bool
+	FFZ     bool
+	SevenTV bool
 }
 
 type EmoteDownloader struct {
-	Emotes []Emote
+	BTTVEmotes    map[string]BTTVEmote
+	FFZEmotes     map[string]FFZEmote
+	SevenTVEmotes map[string]SevenTVEmote
 }
 
-func (ed *EmoteDownloader) Download() error {
+func NewEmoteDownloader(config *EmoteDownloaderConfig) *EmoteDownloader {
+	ed := &EmoteDownloader{}
+	if config.BTTV {
+		ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
+	}
+	if config.FFZ {
+		ed.FFZEmotes = make(map[string]FFZEmote, 64)
+	}
+	if config.SevenTV {
+		ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
+	}
+	return ed
+}
+
+// Loads all emote and badge data into memory based on configuration.
+func (ed *EmoteDownloader) Load() error {
 	var err error
 
-	emotesChan := make(chan []Emote, 4)
 	errorChan := make(chan error, 4)
 
 	var wg sync.WaitGroup
@@ -60,69 +79,24 @@ func (ed *EmoteDownloader) Download() error {
 	go func() {
 		defer wg.Done()
 
-		bttvEmotes, err := getBTTVGlobalEmotes()
-		emotesChan <- bttvEmotes
-		errorChan <- err
+		bttvEmotes, err := getGlobalBTTVEmotes()
+		if err != nil {
+			errorChan <- err
+			return
+		}
+
+		for _, e := range bttvEmotes {
+			ed.BTTVEmotes[e.Code] = e
+		}
 	}()
 
 	wg.Wait()
 
-	close(emotesChan)
 	close(errorChan)
 
 	for e := range errorChan {
 		err = errors.Join(e)
 	}
 
-	for emotes := range emotesChan {
-		ed.Emotes = slices.Concat(emotes)
-	}
-
 	return err
-}
-
-func getBTTVGlobalEmotes() ([]Emote, error) {
-	req := &http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Scheme: "https",
-			Host:   "api.betterttv.net",
-			Path:   "/" + bttvAPIVersion + "/cached/emotes/global",
-		},
-		Header: http.Header{},
-	}
-
-	//req.Header.Set("Client-ID", b.ClientID)
-
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if response.StatusCode != http.StatusOK {
-		errorMessage := &jsonError{}
-		err = json.Unmarshal(body, errorMessage)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(errorMessage.Error.Message)
-	}
-
-	bttvEmotes := []Emote{}
-	err = json.Unmarshal(body, &bttvEmotes)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, _ := range bttvEmotes {
-		bttvEmotes[i].Provider = "BTTV"
-	}
-
-	return bttvEmotes, nil
 }
