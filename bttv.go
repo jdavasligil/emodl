@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"unsafe"
 
 	"github.com/mailru/easyjson"
 )
@@ -20,6 +21,21 @@ var (
 //easyjson:json
 type BTTVEmoteSlice []BTTVEmote
 
+func (es BTTVEmoteSlice) Size() uintptr {
+	if es == nil {
+		return 0
+	}
+	var size uintptr
+
+	size += unsafe.Sizeof(es)
+
+	for _, e := range es {
+		size += e.Size()
+	}
+
+	return size
+}
+
 type BTTVEmote struct {
 	ID        string `json:"id"`
 	Name      string `json:"code"`
@@ -28,7 +44,14 @@ type BTTVEmote struct {
 	UserID    string `json:"userId,intern"`
 }
 
-func getGlobalBTTVEmotes() ([]BTTVEmote, error) {
+func (e *BTTVEmote) Size() uintptr {
+	if e == nil {
+		return 0
+	}
+	return unsafe.Sizeof(*e)
+}
+
+func getGlobalBTTVEmotes() (BTTVEmoteSlice, error) {
 	sb := strings.Builder{}
 	err := apiPathTmpl.Execute(&sb, apiPath{
 		Version: bttvAPIVersion,

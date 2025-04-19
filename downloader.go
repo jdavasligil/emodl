@@ -1,6 +1,7 @@
 // TODO:
 // - Create interface for all emotes and badges
 // - Get URL from Name
+// - Option: Periodic update checks? (go CheckUpdates)
 
 // Reference:
 // https://github.com/SevenTV/chatterino7/blob/chatterino7/src/providers/seventv/SeventvAPI.cpp
@@ -60,26 +61,49 @@ func NewEmoteDownloader(config *EmoteDownloaderConfig) *EmoteDownloader {
 
 // Loads all emote and badge data into memory based on configuration.
 func (ed *EmoteDownloader) Load() error {
+	if ed == nil {
+		return errors.New("Nil dereference on EmoteDownloader")
+	}
 	var err error
 
 	errorChan := make(chan error, 4)
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	if ed.BTTVEmotes != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		bttvEmotes, err := getGlobalBTTVEmotes()
-		if err != nil {
-			errorChan <- err
-			return
-		}
+			bttvEmotes, err := getGlobalBTTVEmotes()
+			if err != nil {
+				errorChan <- err
+				return
+			}
 
-		for _, e := range bttvEmotes {
-			ed.BTTVEmotes[e.Name] = e
-		}
-	}()
+			for _, e := range bttvEmotes {
+				ed.BTTVEmotes[e.Name] = e
+			}
+		}()
+	}
+
+	if ed.SevenTVEmotes != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			c, err := get7TVEmoteCollection("global")
+			if err != nil {
+				errorChan <- err
+				return
+			}
+
+			for _, data := range c.Emotes {
+				e := data.Data
+				ed.SevenTVEmotes[e.Name] = e
+			}
+		}()
+	}
 
 	wg.Wait()
 

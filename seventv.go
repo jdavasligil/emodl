@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
+	"unsafe"
 
 	"github.com/mailru/easyjson"
 )
@@ -37,6 +38,20 @@ type SevenTVEmoteCollection struct {
 	} `json:"emotes"`
 }
 
+func (c *SevenTVEmoteCollection) Size() uintptr {
+	if c == nil {
+		return 0
+	}
+	var size uintptr
+
+	size += unsafe.Sizeof(*c)
+	for _, e := range c.Emotes {
+		size += e.Data.Size()
+	}
+
+	return size
+}
+
 type SevenTVEmote struct {
 	Id       string `json:"id"`
 	Name     string `json:"name"`
@@ -53,6 +68,21 @@ type SevenTVEmote struct {
 			Format     string `json:"format"`
 		} `json:"files"`
 	} `json:"host"`
+}
+
+func (e *SevenTVEmote) Size() uintptr {
+	if e == nil {
+		return 0
+	}
+	var size uintptr
+
+	size += unsafe.Sizeof(*e)
+
+	for _, file := range e.Host.Files {
+		size += unsafe.Sizeof(file)
+	}
+
+	return size
 }
 
 // Performs GET request for the emote collection

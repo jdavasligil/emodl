@@ -1,6 +1,8 @@
 package emotedownloader
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestGet7TVEmoteCollection(t *testing.T) {
 	t.Parallel()
@@ -11,4 +13,5 @@ func TestGet7TVEmoteCollection(t *testing.T) {
 	if c == nil {
 		t.Fatal("Nil collection")
 	}
+	t.Logf("7TVEmoteCollection Size: %s", humanSize(c.Size()))
 }

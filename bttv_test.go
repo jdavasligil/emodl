@@ -17,6 +17,8 @@ func TestGetGlobalBTTVEmotes(t *testing.T) {
 		t.Fatal("nil emotes slice")
 	}
 
+	t.Logf("BTTVEmoteSlice Size: %s", humanSize(bttvEmotes.Size()))
+
 	for _, e := range bttvEmotes {
 		if e.ID == "" {
 			t.Fatal("ID empty")
