@@ -30,9 +30,6 @@ type apiPath struct {
 	Path    string
 }
 
-type FFZEmote struct {
-}
-
 type EmoteDownloaderConfig struct {
 	BTTV    bool
 	FFZ     bool
