@@ -1,4 +1,4 @@
-package emotedownloader
+package emodl
 
 // Used to unmarshal errors from an API response
 //

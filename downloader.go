@@ -6,7 +6,7 @@
 // Reference:
 // https://github.com/SevenTV/chatterino7/blob/chatterino7/src/providers/seventv/SeventvAPI.cpp
 
-package emotedownloader
+package emodl
 
 import (
 	"errors"
@@ -30,36 +30,37 @@ type apiPath struct {
 	Path    string
 }
 
-type EmoteDownloaderConfig struct {
+type DownloaderOptions struct {
 	BTTV    bool
 	FFZ     bool
 	SevenTV bool
 }
 
-type EmoteDownloader struct {
+type Downloader struct {
 	BTTVEmotes    map[string]BTTVEmote
 	FFZEmotes     map[string]FFZEmote
 	SevenTVEmotes map[string]SevenTVEmote
 }
 
-func NewEmoteDownloader(config *EmoteDownloaderConfig) *EmoteDownloader {
-	ed := &EmoteDownloader{}
-	if config.BTTV {
+func NewDownloader(opt *DownloaderOptions) *Downloader {
+	ed := &Downloader{}
+	opt.FFZ = false // FFZ not implemented yet!
+	if opt.BTTV {
 		ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
 	}
-	if config.FFZ {
+	if opt.FFZ {
 		ed.FFZEmotes = make(map[string]FFZEmote, 64)
 	}
-	if config.SevenTV {
+	if opt.SevenTV {
 		ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
 	}
 	return ed
 }
 
 // Loads all emote and badge data into memory based on configuration.
-func (ed *EmoteDownloader) Load() error {
+func (ed *Downloader) Load() error {
 	if ed == nil {
-		return errors.New("Nil dereference on EmoteDownloader")
+		return errors.New("Nil dereference on Downloader")
 	}
 	var err error
 

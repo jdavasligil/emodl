@@ -1,4 +1,4 @@
-package emotedownloader
+package emodl
 
 import (
 	"encoding/json"

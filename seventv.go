@@ -1,4 +1,4 @@
-package emotedownloader
+package emodl
 
 // DOCUMENTATION
 // https://github.com/SevenTV/API/blob/main/internal/api/rest/v3/docs/swagger.json

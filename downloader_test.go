@@ -1,4 +1,4 @@
-package emotedownloader
+package emodl
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestDownloader(t *testing.T) {
 	t.Parallel()
-	ed := NewEmoteDownloader(&EmoteDownloaderConfig{
+	ed := NewDownloader(&DownloaderConfig{
 		BTTV:    true,
 		SevenTV: true,
 	})

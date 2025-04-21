@@ -1,4 +1,4 @@
-module github.com/jdavasligil/emote-downloader
+module github.com/jdavasligil/emodl
 
 go 1.24.2
 
