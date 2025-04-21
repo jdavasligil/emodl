@@ -17,14 +17,17 @@ func TestGet7TVEmoteCollection(t *testing.T) {
 		t.Fatal("No 7TV emotes")
 	}
 	t.Logf("7TVEmoteCollection Size: %s", humanSize(c.Size()))
-	t.Run("TestEmoteGetImageURL", func(t *testing.T) {
+	t.Run("TestEmoteGetImage", func(t *testing.T) {
 		e := c.Emotes[0].Data
-		s, err := prettyPrint(e.Host.Files)
+		img, err := e.GetImage("2x", "webp")
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Log(s)
-		url, err := e.GetImageURL("2x", "webp")
-		t.Logf("\n\tURL: %s\n", url)
+		t.Logf("\nURL: %s\nID: %s\n", img.URL, img.ID)
+		img, err = e.GetImage("", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("\nURL: %s\nID: %s\n", img.URL, img.ID)
 	})
 }

@@ -22,6 +22,13 @@ var (
 	imageFallbacks = [11]string{"WEBP", "AVIF", "APNG", "GIF", "PNG", "JPEG", "JPG", "JFIF", "PJPEG", "PJP", "SVG"}
 )
 
+type Image struct {
+	URL    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	ID     string `json:"id"`
+}
+
 type emotePath struct {
 	ID    string
 	Scale string

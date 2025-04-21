@@ -72,37 +72,47 @@ type SevenTVEmote struct {
 	} `json:"host"`
 }
 
-// GetImageURL returns the full URL of an image of a given size and format.
+// GetImage returns the data of an image of a given size and format.
 //
 // Will always attempt to provide a correct image url nearest to intention.
 // Failure to obtain desired scale or format leads to attempted fallbacks.
-// 
+//
 // @param scale  The intended scale of the image ("1x", "2x", etc.)
 // @param format The image filetype requested (webp, png, gif, etc.)
-func (e *SevenTVEmote) GetImageURL(scale string, format string) (string, error) {
+func (e *SevenTVEmote) GetImage(scale string, format string) (*Image, error) {
 	if e == nil {
-		return "", errors.New("7TV Emote is nil")
+		return nil, errors.New("7TV Emote is nil")
 	} else if e.Host.Files == nil {
-		return "", errors.New("7TV Emote host files are nil")
+		return nil, errors.New("7TV Emote host files are nil")
 	} else if len(e.Host.Files) == 0 {
-		return "", errors.New("7TV Emote has no host files")
+		return nil, errors.New("7TV Emote has no host files")
 	} else if e.Host.Url == "" {
-		return "", errors.New("7TV Emote has no host url")
+		return nil, errors.New("7TV Emote has no host url")
 	}
+	var url strings.Builder
+	var imgID strings.Builder
 
-	var sb strings.Builder
+	img := &Image{}
 
-	sb.WriteString("https:")
-	sb.WriteString(e.Host.Url)
-	sb.WriteByte('/')
+	imgID.WriteString(e.Id)
+	imgID.WriteByte('+')
+
+	url.WriteString("https:")
+	url.WriteString(e.Host.Url)
+	url.WriteByte('/')
 
 	// Find scale / format match
 	format = strings.ToUpper(format)
 
 	for _, f := range e.Host.Files {
 		if format == f.Format && f.Name[:2] == scale {
-			sb.WriteString(f.Name)
-			return sb.String(), nil
+			url.WriteString(f.Name)
+			imgID.WriteString(f.Name)
+			img.ID = imgID.String()
+			img.Height = f.Height
+			img.Width = f.Width
+			img.URL = url.String()
+			return img, nil
 		}
 	}
 
@@ -110,16 +120,26 @@ func (e *SevenTVEmote) GetImageURL(scale string, format string) (string, error) 
 	for _, fallback := range imageFallbacks {
 		for _, f := range e.Host.Files {
 			if fallback == f.Format && f.Name[:2] == scale {
-				sb.WriteString(f.Name)
-				return sb.String(), nil
+				url.WriteString(f.Name)
+				imgID.WriteString(f.Name)
+				img.ID = imgID.String()
+				img.Height = f.Height
+				img.Width = f.Width
+				img.URL = url.String()
+				return img, nil
 			}
 		}
 	}
 
 	// If no match was still found, simply return the first thing we find.
-	sb.WriteString(e.Host.Files[0].Name)
+	url.WriteString(e.Host.Files[0].Name)
+	imgID.WriteString(e.Host.Files[0].Name)
+	img.ID = imgID.String()
+	img.Height = e.Host.Files[0].Height
+	img.Width = e.Host.Files[0].Width
+	img.URL = url.String()
 
-	return sb.String(), nil
+	return img, nil
 }
 
 func (e *SevenTVEmote) Size() uintptr {
