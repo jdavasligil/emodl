@@ -79,20 +79,19 @@ type SevenTVEmote struct {
 //
 // @param scale  The intended scale of the image ("1x", "2x", etc.)
 // @param format The image filetype requested (webp, png, gif, etc.)
-func (e *SevenTVEmote) GetImage(scale string, format string) (*Image, error) {
+func (e *SevenTVEmote) GetImage(scale string, format string) (Image, error) {
+	var img Image
 	if e == nil {
-		return nil, errors.New("7TV Emote is nil")
+		return img, errors.New("7TV Emote is nil")
 	} else if e.Host.Files == nil {
-		return nil, errors.New("7TV Emote host files are nil")
+		return img, errors.New("7TV Emote host files are nil")
 	} else if len(e.Host.Files) == 0 {
-		return nil, errors.New("7TV Emote has no host files")
+		return img, errors.New("7TV Emote has no host files")
 	} else if e.Host.Url == "" {
-		return nil, errors.New("7TV Emote has no host url")
+		return img, errors.New("7TV Emote has no host url")
 	}
 	var url strings.Builder
 	var imgID strings.Builder
-
-	img := &Image{}
 
 	imgID.WriteString(e.Id)
 	imgID.WriteByte('+')
