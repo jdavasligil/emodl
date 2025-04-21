@@ -18,6 +18,8 @@ import (
 var (
 	apiPathTmpl, _   = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
 	emotePathTmpl, _ = template.New("emote").Parse("emote/{{ .ID }}/{{ .Scale }}.{{ .Ext }}")
+
+	imageFallbacks = [11]string{"WEBP", "AVIF", "APNG", "GIF", "PNG", "JPEG", "JPG", "JFIF", "PJPEG", "PJP", "SVG"}
 )
 
 type emotePath struct {

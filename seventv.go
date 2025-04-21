@@ -72,6 +72,56 @@ type SevenTVEmote struct {
 	} `json:"host"`
 }
 
+// GetImageURL returns the full URL of an image of a given size and format.
+//
+// Will always attempt to provide a correct image url nearest to intention.
+// Failure to obtain desired scale or format leads to attempted fallbacks.
+// 
+// @param scale  The intended scale of the image ("1x", "2x", etc.)
+// @param format The image filetype requested (webp, png, gif, etc.)
+func (e *SevenTVEmote) GetImageURL(scale string, format string) (string, error) {
+	if e == nil {
+		return "", errors.New("7TV Emote is nil")
+	} else if e.Host.Files == nil {
+		return "", errors.New("7TV Emote host files are nil")
+	} else if len(e.Host.Files) == 0 {
+		return "", errors.New("7TV Emote has no host files")
+	} else if e.Host.Url == "" {
+		return "", errors.New("7TV Emote has no host url")
+	}
+
+	var sb strings.Builder
+
+	sb.WriteString("https:")
+	sb.WriteString(e.Host.Url)
+	sb.WriteByte('/')
+
+	// Find scale / format match
+	format = strings.ToUpper(format)
+
+	for _, f := range e.Host.Files {
+		if format == f.Format && f.Name[:2] == scale {
+			sb.WriteString(f.Name)
+			return sb.String(), nil
+		}
+	}
+
+	// If no match was found, check fallback formats
+	for _, fallback := range imageFallbacks {
+		for _, f := range e.Host.Files {
+			if fallback == f.Format && f.Name[:2] == scale {
+				sb.WriteString(f.Name)
+				return sb.String(), nil
+			}
+		}
+	}
+
+	// If no match was still found, simply return the first thing we find.
+	sb.WriteString(e.Host.Files[0].Name)
+
+	return sb.String(), nil
+}
+
 func (e *SevenTVEmote) Size() uintptr {
 	if e == nil {
 		return 0

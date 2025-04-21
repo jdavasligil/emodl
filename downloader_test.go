@@ -6,7 +6,7 @@ import (
 
 func TestDownloader(t *testing.T) {
 	t.Parallel()
-	ed := NewDownloader(&DownloaderConfig{
+	ed := NewDownloader(&DownloaderOptions{
 		BTTV:    true,
 		SevenTV: true,
 	})
