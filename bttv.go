@@ -44,11 +44,12 @@ type BTTVEmote struct {
 	UserID    string `json:"userId,intern"`
 }
 
-func (e *BTTVEmote) Size() uintptr {
-	if e == nil {
-		return 0
-	}
-	return unsafe.Sizeof(*e)
+func (e BTTVEmote) URL() string {
+	return ""
+}
+
+func (e BTTVEmote) Size() uintptr {
+	return unsafe.Sizeof(e)
 }
 
 func getGlobalBTTVEmotes() (BTTVEmoteSlice, error) {
