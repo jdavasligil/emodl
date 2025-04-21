@@ -1,6 +1,7 @@
 // TODO:
-// - Create interface for all emotes and badges
 // - Get URL from Name
+// - Get channel custom emotes
+// - Get custom badges
 // - Option: Periodic update checks? (go CheckUpdates)
 
 // Reference:

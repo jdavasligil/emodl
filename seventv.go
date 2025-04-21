@@ -2,6 +2,8 @@ package emodl
 
 // DOCUMENTATION
 // https://github.com/SevenTV/API/blob/main/internal/api/rest/v3/docs/swagger.json
+//
+// URL EXAMPLES
 // https://cdn.7tv.app/emote/01F6MQ33FG000FFJ97ZB8MWV52/3x.avif
 // https://7tv.io/v3/emote-sets/global
 
