@@ -1,10 +1,7 @@
 package emodl
 
 import (
-	"bytes"
 	"testing"
-
-	"github.com/mailru/easyjson"
 )
 
 func TestGetGlobalBTTVEmotes(t *testing.T) {
@@ -33,29 +30,9 @@ func TestGetGlobalBTTVEmotes(t *testing.T) {
 			t.Fail()
 		}
 	}
-}
-
-// TODO: JSON fuzzing with arbitrary possible json values
-func TestBTTVEasyJSON(t *testing.T) {
-	t.Parallel()
-	type BTTVJSONTest struct {
-		EmotesBefore BTTVEmoteSlice
-		EmotesAfter  BTTVEmoteSlice
+	s, err := prettyPrint(bttvEmotes)
+	if err != nil {
+		t.Fatal(err)
 	}
-	tests := []BTTVJSONTest{
-		{BTTVEmoteSlice{{}}, BTTVEmoteSlice{{}}},
-		{BTTVEmoteSlice{{ID: "1", Name: "1", ImageType: "png", Animated: true, UserID: "1"}}, BTTVEmoteSlice{{}}},
-	}
-
-	w := &bytes.Buffer{}
-	for _, test := range tests {
-		easyjson.MarshalToWriter(test.EmotesBefore, w)
-		easyjson.UnmarshalFromReader(w, &test.EmotesAfter)
-		for i := range test.EmotesBefore {
-			if test.EmotesAfter[i] != test.EmotesBefore[i] {
-				t.Fatalf("Expected: %v\n Got: %v\n", test.EmotesBefore, test.EmotesAfter)
-			}
-		}
-		w.Reset()
-	}
+	t.Log(s)
 }

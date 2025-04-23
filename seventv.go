@@ -24,7 +24,7 @@ var (
 	sevenTVAPIVersion = "v3"
 	sevenTVHost       = "7tv.io"
 
-	sevenTVPathTmpl, _ = template.New("api").Parse("/{{ .Version }}/{{ .Path }}/{{ .Option }}")
+	sevenTVPathTmpl, _ = template.New("sevenTVPath").Parse("/{{ .Version }}/{{ .Path }}/{{ .Option }}")
 )
 
 type sevenTVPath struct {

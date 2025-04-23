@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"text/template"
 	"unsafe"
 
 	"github.com/mailru/easyjson"
 )
 
 var (
-	bttvAPIVersion = "3"
-	bttvHost       = "api.betterttv.net"
-	// https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/1x.webp
-	bttvCDN = "cdn.betterttv.net"
+	bttvAPIVersion     = "3"
+	bttvHost           = "api.betterttv.net"
+	bttvCDNPathTmpl, _ = template.New("bttvCDN").Parse("https://cdn.betterttv.net/emote/{{ .ID }}/1x.webp")
 )
 
 //easyjson:json
@@ -45,7 +45,21 @@ type BTTVEmote struct {
 }
 
 func (e BTTVEmote) URL() string {
+	var sb strings.Builder
+	err := sevenTVPathTmpl.Execute(&sb, e)
+	if err != nil {
+		return ""
+	}
 	return ""
+}
+
+func (e BTTVEmote) Image() Image {
+	return Image{
+		URL:    e.URL(),
+		Width:  28,
+		Height: 28,
+		ID:     e.ID,
+	}
 }
 
 func (e BTTVEmote) Size() uintptr {

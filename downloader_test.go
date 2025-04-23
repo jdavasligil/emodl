@@ -27,9 +27,4 @@ func TestDownloader(t *testing.T) {
 		t.Fatal("SevenTVEmotes is empty")
 	}
 	t.Logf("\nDownloaded:\n\t%d Emotes from 7TV\n\t%d Emotes from BTTV\n", len(ed.SevenTVEmotes), len(ed.BTTVEmotes))
-	//s, err := prettyPrint(ed.BTTVEmotes)
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	//t.Log(s)
 }
