@@ -11,8 +11,10 @@ package emodl
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"text/template"
+	"time"
 )
 
 var (
@@ -43,27 +45,21 @@ type apiPath struct {
 type DownloaderOptions struct {
 	BTTV    bool
 	FFZ     bool
-	SevenTV bool
+	SevenTV *SevenTVOptions
 }
 
 type Downloader struct {
+	Options       DownloaderOptions
 	BTTVEmotes    map[string]BTTVEmote
 	FFZEmotes     map[string]FFZEmote
 	SevenTVEmotes map[string]SevenTVEmote
 }
 
 func NewDownloader(opt *DownloaderOptions) *Downloader {
-	ed := &Downloader{}
-	opt.FFZ = false // FFZ not implemented yet!
-	if opt.BTTV {
-		ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
-	}
-	if opt.FFZ {
-		ed.FFZEmotes = make(map[string]FFZEmote, 64)
-	}
-	if opt.SevenTV {
-		ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
-	}
+	ed := &Downloader{Options: *opt}
+	ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
+	//ed.FFZEmotes = make(map[string]FFZEmote, 64)
+	ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
 	return ed
 }
 
@@ -74,51 +70,104 @@ func (ed *Downloader) Load() error {
 	}
 	var err error
 
-	errorChan := make(chan error, 4)
+	errorChan := make(chan error, 8)
+	sevenTVEmotesChan := make(chan SevenTVEmoteSet, 8)
+	wgdone := make(chan struct{})
+	done := make(chan struct{})
 
+	// Copier goroutine will copy emote data into the map as it comes in
+	go func() {
+		for {
+			select {
+			case set := <-sevenTVEmotesChan:
+				for _, data := range set.Emotes {
+					e := data.Data
+					ed.SevenTVEmotes[e.Name] = e
+				}
+			case e := <-errorChan:
+				err = errors.Join(e)
+			case <-wgdone:
+				// Collect all buffered errors and emotes when done downloading
+				close(sevenTVEmotesChan)
+				close(errorChan)
+				for e := range errorChan {
+					err = errors.Join(e)
+				}
+				for s := range sevenTVEmotesChan {
+					for _, data := range s.Emotes {
+						e := data.Data
+						ed.SevenTVEmotes[e.Name] = e
+					}
+				}
+				done <- struct{}{}
+				return
+			}
+		}
+	}()
+
+	// Get request routines will download emote data asynchronously
 	var wg sync.WaitGroup
 
-	if ed.BTTVEmotes != nil {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		bttvEmotes, err := getGlobalBTTVEmotes()
+		if err != nil {
+			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting global BTTV emotes", err))
+			return
+		}
+
+		for _, e := range bttvEmotes {
+			ed.BTTVEmotes[e.Name] = e
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		s, err := get7TVEmoteSet("global")
+		if err != nil {
+			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting global 7TV emotes", err))
+			return
+		}
+		sevenTVEmotesChan <- s
+	}()
+
+	if ed.Options.SevenTV != nil {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
-			bttvEmotes, err := getGlobalBTTVEmotes()
+			sids, err := get7TVUserEmoteSetIDs(ed.Options.SevenTV)
 			if err != nil {
-				errorChan <- err
+				errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting user 7TV emotes with opt %v", err, *ed.Options.SevenTV))
 				return
 			}
 
-			for _, e := range bttvEmotes {
-				ed.BTTVEmotes[e.Name] = e
-			}
-		}()
-	}
-
-	if ed.SevenTVEmotes != nil {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			c, err := get7TVEmoteCollection("global")
-			if err != nil {
-				errorChan <- err
-				return
-			}
-
-			for _, data := range c.Emotes {
-				e := data.Data
-				ed.SevenTVEmotes[e.Name] = e
+			for _, sid := range sids {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					s, err := get7TVEmoteSet(sid)
+					if err != nil {
+						errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting 7TV emote set %s", err, sid))
+						return
+					}
+					sevenTVEmotesChan <- s
+				}()
 			}
 		}()
 	}
 
 	wg.Wait()
+	wgdone <- struct{}{}
 
-	close(errorChan)
-
-	for e := range errorChan {
-		err = errors.Join(e)
+	timeout := time.NewTicker(5 * time.Second)
+	select {
+	case <-done:
+	case <-timeout.C:
 	}
 
 	return err

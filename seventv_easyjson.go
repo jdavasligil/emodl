@@ -17,7 +17,230 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out *SevenTVEmoteCollection) {
+func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *SevenTVUser) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = string(in.String())
+		case "emote_sets":
+			if in.IsNull() {
+				in.Skip()
+				out.EmoteSets = nil
+			} else {
+				in.Delim('[')
+				if out.EmoteSets == nil {
+					if !in.IsDelim(']') {
+						out.EmoteSets = make([]struct {
+							ID string `json:"id"`
+						}, 0, 4)
+					} else {
+						out.EmoteSets = []struct {
+							ID string `json:"id"`
+						}{}
+					}
+				} else {
+					out.EmoteSets = (out.EmoteSets)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 struct {
+						ID string `json:"id"`
+					}
+					easyjson2d7cdb3fDecode(in, &v1)
+					out.EmoteSets = append(out.EmoteSets, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in SevenTVUser) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.ID))
+	}
+	{
+		const prefix string = ",\"emote_sets\":"
+		out.RawString(prefix)
+		if in.EmoteSets == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v2, v3 := range in.EmoteSets {
+				if v2 > 0 {
+					out.RawByte(',')
+				}
+				easyjson2d7cdb3fEncode(out, v3)
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v SevenTVUser) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v SevenTVUser) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *SevenTVUser) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *SevenTVUser) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl(l, v)
+}
+func easyjson2d7cdb3fDecode(in *jlexer.Lexer, out *struct {
+	ID string `json:"id"`
+}) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson2d7cdb3fEncode(out *jwriter.Writer, in struct {
+	ID string `json:"id"`
+}) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.ID))
+	}
+	out.RawByte('}')
+}
+func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *SevenTVPlatformUser) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "user":
+			(out.User).UnmarshalEasyJSON(in)
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl1(out *jwriter.Writer, in SevenTVPlatformUser) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"user\":"
+		out.RawString(prefix[1:])
+		(in.User).MarshalEasyJSON(out)
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v SevenTVPlatformUser) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl1(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v SevenTVPlatformUser) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl1(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *SevenTVPlatformUser) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl1(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *SevenTVPlatformUser) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl1(l, v)
+}
+func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(in *jlexer.Lexer, out *SevenTVEmoteSet) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -58,11 +281,11 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out 
 					out.Emotes = (out.Emotes)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 struct {
+					var v4 struct {
 						Data SevenTVEmote `json:"data"`
 					}
-					easyjson2d7cdb3fDecode(in, &v1)
-					out.Emotes = append(out.Emotes, v1)
+					easyjson2d7cdb3fDecode1(in, &v4)
+					out.Emotes = append(out.Emotes, v4)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -77,7 +300,7 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, in SevenTVEmoteCollection) {
+func easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl2(out *jwriter.Writer, in SevenTVEmoteSet) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -93,11 +316,11 @@ func easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, i
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v2, v3 := range in.Emotes {
-				if v2 > 0 {
+			for v5, v6 := range in.Emotes {
+				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjson2d7cdb3fEncode(out, v3)
+				easyjson2d7cdb3fEncode1(out, v6)
 			}
 			out.RawByte(']')
 		}
@@ -106,29 +329,29 @@ func easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, i
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v SevenTVEmoteCollection) MarshalJSON() ([]byte, error) {
+func (v SevenTVEmoteSet) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader(&w, v)
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v SevenTVEmoteCollection) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader(w, v)
+func (v SevenTVEmoteSet) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *SevenTVEmoteCollection) UnmarshalJSON(data []byte) error {
+func (v *SevenTVEmoteSet) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader(&r, v)
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *SevenTVEmoteCollection) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader(l, v)
+func (v *SevenTVEmoteSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(l, v)
 }
-func easyjson2d7cdb3fDecode(in *jlexer.Lexer, out *struct {
+func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 	Data SevenTVEmote `json:"data"`
 }) {
 	isTopLevel := in.IsStart()
@@ -150,7 +373,7 @@ func easyjson2d7cdb3fDecode(in *jlexer.Lexer, out *struct {
 		}
 		switch key {
 		case "data":
-			easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader1(in, &out.Data)
+			easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl3(in, &out.Data)
 		default:
 			in.SkipRecursive()
 		}
@@ -161,7 +384,7 @@ func easyjson2d7cdb3fDecode(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2d7cdb3fEncode(out *jwriter.Writer, in struct {
+func easyjson2d7cdb3fEncode1(out *jwriter.Writer, in struct {
 	Data SevenTVEmote `json:"data"`
 }) {
 	out.RawByte('{')
@@ -170,11 +393,11 @@ func easyjson2d7cdb3fEncode(out *jwriter.Writer, in struct {
 	{
 		const prefix string = ",\"data\":"
 		out.RawString(prefix[1:])
-		easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader1(out, in.Data)
+		easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl3(out, in.Data)
 	}
 	out.RawByte('}')
 }
-func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out *SevenTVEmote) {
+func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl3(in *jlexer.Lexer, out *SevenTVEmote) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -194,13 +417,13 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out
 		}
 		switch key {
 		case "id":
-			out.Id = string(in.String())
+			out.ID = string(in.String())
 		case "name":
 			out.Name = string(in.String())
 		case "animated":
 			out.Animated = bool(in.Bool())
 		case "host":
-			easyjson2d7cdb3fDecode1(in, &out.Host)
+			easyjson2d7cdb3fDecode2(in, &out.Host)
 		default:
 			in.SkipRecursive()
 		}
@@ -211,14 +434,14 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out
 		in.Consumed()
 	}
 }
-func easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader1(out *jwriter.Writer, in SevenTVEmote) {
+func easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl3(out *jwriter.Writer, in SevenTVEmote) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.Id))
+		out.String(string(in.ID))
 	}
 	{
 		const prefix string = ",\"name\":"
@@ -233,11 +456,11 @@ func easyjson2d7cdb3fEncodeGithubComJdavasligilDownloader1(out *jwriter.Writer, 
 	{
 		const prefix string = ",\"host\":"
 		out.RawString(prefix)
-		easyjson2d7cdb3fEncode1(out, in.Host)
+		easyjson2d7cdb3fEncode2(out, in.Host)
 	}
 	out.RawByte('}')
 }
-func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
+func easyjson2d7cdb3fDecode2(in *jlexer.Lexer, out *struct {
 	Url   string `json:"url,intern"`
 	Files []struct {
 		Name       string `json:"name"`
@@ -301,7 +524,7 @@ func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 					out.Files = (out.Files)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v4 struct {
+					var v7 struct {
 						Name       string `json:"name"`
 						StaticName string `json:"static_name"`
 						Width      int    `json:"width"`
@@ -310,8 +533,8 @@ func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 						Size       uint32 `json:"size"`
 						Format     string `json:"format"`
 					}
-					easyjson2d7cdb3fDecode2(in, &v4)
-					out.Files = append(out.Files, v4)
+					easyjson2d7cdb3fDecode3(in, &v7)
+					out.Files = append(out.Files, v7)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -326,7 +549,7 @@ func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2d7cdb3fEncode1(out *jwriter.Writer, in struct {
+func easyjson2d7cdb3fEncode2(out *jwriter.Writer, in struct {
 	Url   string `json:"url,intern"`
 	Files []struct {
 		Name       string `json:"name"`
@@ -353,18 +576,18 @@ func easyjson2d7cdb3fEncode1(out *jwriter.Writer, in struct {
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v5, v6 := range in.Files {
-				if v5 > 0 {
+			for v8, v9 := range in.Files {
+				if v8 > 0 {
 					out.RawByte(',')
 				}
-				easyjson2d7cdb3fEncode2(out, v6)
+				easyjson2d7cdb3fEncode3(out, v9)
 			}
 			out.RawByte(']')
 		}
 	}
 	out.RawByte('}')
 }
-func easyjson2d7cdb3fDecode2(in *jlexer.Lexer, out *struct {
+func easyjson2d7cdb3fDecode3(in *jlexer.Lexer, out *struct {
 	Name       string `json:"name"`
 	StaticName string `json:"static_name"`
 	Width      int    `json:"width"`
@@ -415,7 +638,7 @@ func easyjson2d7cdb3fDecode2(in *jlexer.Lexer, out *struct {
 		in.Consumed()
 	}
 }
-func easyjson2d7cdb3fEncode2(out *jwriter.Writer, in struct {
+func easyjson2d7cdb3fEncode3(out *jwriter.Writer, in struct {
 	Name       string `json:"name"`
 	StaticName string `json:"static_name"`
 	Width      int    `json:"width"`

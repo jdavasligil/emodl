@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson42239ddeDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out *jsonError) {
+func easyjson42239ddeDecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *jsonError) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -48,7 +48,7 @@ func easyjson42239ddeDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson42239ddeEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, in jsonError) {
+func easyjson42239ddeEncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in jsonError) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -63,25 +63,25 @@ func easyjson42239ddeEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, i
 // MarshalJSON supports json.Marshaler interface
 func (v jsonError) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson42239ddeEncodeGithubComJdavasligilDownloader(&w, v)
+	easyjson42239ddeEncodeGithubComJdavasligilEmodl(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v jsonError) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson42239ddeEncodeGithubComJdavasligilDownloader(w, v)
+	easyjson42239ddeEncodeGithubComJdavasligilEmodl(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *jsonError) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson42239ddeDecodeGithubComJdavasligilDownloader(&r, v)
+	easyjson42239ddeDecodeGithubComJdavasligilEmodl(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *jsonError) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson42239ddeDecodeGithubComJdavasligilDownloader(l, v)
+	easyjson42239ddeDecodeGithubComJdavasligilEmodl(l, v)
 }
 func easyjson42239ddeDecode(in *jlexer.Lexer, out *struct {
 	Message string `json:"message"`

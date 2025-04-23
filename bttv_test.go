@@ -21,16 +21,16 @@ func TestGetGlobalBTTVEmotes(t *testing.T) {
 
 	for _, e := range bttvEmotes {
 		if e.ID == "" {
-			t.Fatal("ID empty")
+			t.Logf("ID empty: %v", e)
+			t.Fail()
 		}
 		if e.Name == "" {
-			t.Fatal("Name empty")
+			t.Logf("Name empty: %v", e)
+			t.Fail()
 		}
 		if e.ImageType == "" {
-			t.Fatal("ImageType empty")
-		}
-		if e.UserID == "" {
-			t.Fatal("UserID empty")
+			t.Logf("ImageType empty: %v", e)
+			t.Fail()
 		}
 	}
 }

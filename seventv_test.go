@@ -4,21 +4,21 @@ import (
 	"testing"
 )
 
-func TestGet7TVEmoteCollection(t *testing.T) {
+func TestGet7TVEmoteSet(t *testing.T) {
 	t.Parallel()
-	c, err := get7TVEmoteCollection("global")
+	s, err := get7TVEmoteSet("global")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c == nil {
-		t.Fatal("Nil collection")
+	if s.Emotes == nil {
+		t.Fatal("Nil set")
 	}
-	if len(c.Emotes) == 0 {
+	if len(s.Emotes) == 0 {
 		t.Fatal("No 7TV emotes")
 	}
-	t.Logf("7TVEmoteCollection Size: %s", humanSize(c.Size()))
+	t.Logf("7TVEmoteSet Size: %s", humanSize(s.Size()))
 	t.Run("TestEmoteGetImage", func(t *testing.T) {
-		e := c.Emotes[0].Data
+		e := s.Emotes[0].Data
 		img, err := e.GetImage("2x", "webp")
 		if err != nil {
 			t.Fatal(err)
@@ -29,5 +29,68 @@ func TestGet7TVEmoteCollection(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Logf("\nURL: %s\nID: %s\n", img.URL, img.ID)
+	})
+}
+
+func TestGet7TVEmoteSetIDs(t *testing.T) {
+	t.Parallel()
+	t.Run("With7TVID", func(t *testing.T) {
+		t.Parallel()
+		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
+			SevenTVID: "01JSG2QHPPEXFXPH65AE1PNMFD",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(sids) != 1 {
+			t.Fatalf("Emote Set IDs: %v has more than one emote set", sids)
+		}
+		if sids[0] != "01JSG36904T5GM79JJXBVTSFKS" {
+			t.Fatalf("Emote Set ID: %s different from expected %s", sids[0], "01JSG36904T5GM79JJXBVTSFKS")
+		}
+	})
+	t.Run("WithPlatformNoID", func(t *testing.T) {
+		t.Parallel()
+		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
+			Platform: "twitch",
+		})
+		if err == nil {
+			t.Logf("No error with no platform id")
+			t.Fail()
+		}
+		if sids != nil {
+			t.Logf("Emote Set IDs not nil with no platform id")
+			t.Fail()
+		}
+	})
+	t.Run("WithPlatformIDNoPlatform", func(t *testing.T) {
+		t.Parallel()
+		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
+			PlatformID: "1048391821",
+		})
+		if err == nil {
+			t.Logf("No error with no platform")
+			t.Fail()
+		}
+		if sids != nil {
+			t.Logf("Emote Set IDs not nil with no platform")
+			t.Fail()
+		}
+	})
+	t.Run("WithPlatformAndPID", func(t *testing.T) {
+		t.Parallel()
+		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
+			Platform:   "twitch",
+			PlatformID: "1048391821",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(sids) != 1 {
+			t.Fatalf("Emote Set IDs: %v has more than one emote set", sids)
+		}
+		if sids[0] != "01JSG36904T5GM79JJXBVTSFKS" {
+			t.Fatalf("Emote Set ID: %s different from expected %s", sids[0], "01JSG36904T5GM79JJXBVTSFKS")
+		}
 	})
 }

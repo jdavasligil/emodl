@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson515ca9ccDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out *BTTVEmoteSlice) {
+func easyjson515ca9ccDecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *BTTVEmoteSlice) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -35,7 +35,7 @@ func easyjson515ca9ccDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out 
 		}
 		for !in.IsDelim(']') {
 			var v1 BTTVEmote
-			easyjson515ca9ccDecodeGithubComJdavasligilDownloader1(in, &v1)
+			easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in, &v1)
 			*out = append(*out, v1)
 			in.WantComma()
 		}
@@ -45,7 +45,7 @@ func easyjson515ca9ccDecodeGithubComJdavasligilDownloader(in *jlexer.Lexer, out 
 		in.Consumed()
 	}
 }
-func easyjson515ca9ccEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, in BTTVEmoteSlice) {
+func easyjson515ca9ccEncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in BTTVEmoteSlice) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
@@ -54,7 +54,7 @@ func easyjson515ca9ccEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, i
 			if v2 > 0 {
 				out.RawByte(',')
 			}
-			easyjson515ca9ccEncodeGithubComJdavasligilDownloader1(out, v3)
+			easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out, v3)
 		}
 		out.RawByte(']')
 	}
@@ -63,27 +63,27 @@ func easyjson515ca9ccEncodeGithubComJdavasligilDownloader(out *jwriter.Writer, i
 // MarshalJSON supports json.Marshaler interface
 func (v BTTVEmoteSlice) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson515ca9ccEncodeGithubComJdavasligilDownloader(&w, v)
+	easyjson515ca9ccEncodeGithubComJdavasligilEmodl(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v BTTVEmoteSlice) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson515ca9ccEncodeGithubComJdavasligilDownloader(w, v)
+	easyjson515ca9ccEncodeGithubComJdavasligilEmodl(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *BTTVEmoteSlice) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson515ca9ccDecodeGithubComJdavasligilDownloader(&r, v)
+	easyjson515ca9ccDecodeGithubComJdavasligilEmodl(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *BTTVEmoteSlice) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson515ca9ccDecodeGithubComJdavasligilDownloader(l, v)
+	easyjson515ca9ccDecodeGithubComJdavasligilEmodl(l, v)
 }
-func easyjson515ca9ccDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out *BTTVEmote) {
+func easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *BTTVEmote) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -110,7 +110,7 @@ func easyjson515ca9ccDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out
 			out.ImageType = string(in.StringIntern())
 		case "animated":
 			out.Animated = bool(in.Bool())
-		case "userId":
+		case "userID":
 			out.UserID = string(in.StringIntern())
 		default:
 			in.SkipRecursive()
@@ -122,7 +122,7 @@ func easyjson515ca9ccDecodeGithubComJdavasligilDownloader1(in *jlexer.Lexer, out
 		in.Consumed()
 	}
 }
-func easyjson515ca9ccEncodeGithubComJdavasligilDownloader1(out *jwriter.Writer, in BTTVEmote) {
+func easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out *jwriter.Writer, in BTTVEmote) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -147,7 +147,7 @@ func easyjson515ca9ccEncodeGithubComJdavasligilDownloader1(out *jwriter.Writer, 
 		out.Bool(bool(in.Animated))
 	}
 	{
-		const prefix string = ",\"userId\":"
+		const prefix string = ",\"userID\":"
 		out.RawString(prefix)
 		out.String(string(in.UserID))
 	}

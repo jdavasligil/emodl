@@ -18,16 +18,16 @@ func humanSize(s uintptr) string {
 	}
 
 	size := float64(s)
-	unitIdx := 0
+	unitIDx := 0
 	for i := range len(unitMap) {
 		if d, _ := math.Modf(size / 1024.0); d == 0 {
-			unitIdx = i
+			unitIDx = i
 			break
 		}
-		unitIdx++
+		unitIDx++
 		size /= 1024.0
 	}
-	return fmt.Sprintf("%.2f %s", size, unitMap[unitIdx])
+	return fmt.Sprintf("%.2f %s", size, unitMap[unitIDx])
 }
 
 func prettyPrint(v any) (string, error) {

@@ -41,7 +41,7 @@ type BTTVEmote struct {
 	Name      string `json:"code"`
 	ImageType string `json:"imageType,intern"`
 	Animated  bool   `json:"animated"`
-	UserID    string `json:"userId,intern"`
+	UserID    string `json:"userID,intern"`
 }
 
 func (e BTTVEmote) URL() string {
