@@ -45,12 +45,12 @@ type BTTVEmote struct {
 }
 
 func (e BTTVEmote) URL() string {
-	var sb strings.Builder
-	err := sevenTVPathTmpl.Execute(&sb, e)
+	var url strings.Builder
+	err := bttvCDNPathTmpl.Execute(&url, e)
 	if err != nil {
-		return ""
+		panic(err)
 	}
-	return ""
+	return url.String()
 }
 
 func (e BTTVEmote) Image() Image {
@@ -59,6 +59,15 @@ func (e BTTVEmote) Image() Image {
 		Width:  28,
 		Height: 28,
 		ID:     e.ID,
+	}
+}
+
+func (e BTTVEmote) AsEmote() Emote {
+	return Emote{
+		ID: e.ID,
+		Name: e.Name,
+		Images: []Image{e.Image()},
+		Locations: []string{},
 	}
 }
 

@@ -16,9 +16,12 @@ func TestDownloader(t *testing.T) {
 	if ed == nil {
 		t.Fatal("Nil downloader")
 	}
-	err := ed.Load()
+	emotes, err := ed.Load()
 	if err != nil {
 		t.Fatal(err)
+	}
+	if emotes == nil {
+		t.Fatal("Emotes slice is nil")
 	}
 	if len(ed.BTTVEmotes) == 0 {
 		t.Fatal("BTTVEmotes is empty.")
@@ -26,5 +29,13 @@ func TestDownloader(t *testing.T) {
 	if len(ed.SevenTVEmotes) == 0 {
 		t.Fatal("SevenTVEmotes is empty")
 	}
+	if len(emotes) != (len(ed.BTTVEmotes) + len(ed.SevenTVEmotes)) {
+		t.Fatalf("Emotes slice: %v\n does not contain all emotes.", emotes)
+	}
 	t.Logf("\nDownloaded:\n\t%d Emotes from 7TV\n\t%d Emotes from BTTV\n", len(ed.SevenTVEmotes), len(ed.BTTVEmotes))
+	s, err := prettyPrint(emotes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(s)
 }

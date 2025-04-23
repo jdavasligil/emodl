@@ -30,9 +30,9 @@ func TestGetGlobalBTTVEmotes(t *testing.T) {
 			t.Fail()
 		}
 	}
-	s, err := prettyPrint(bttvEmotes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(s)
+	//s, err := prettyPrint(bttvEmotes)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(s)
 }

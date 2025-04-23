@@ -66,13 +66,10 @@ type SevenTVEmoteSet struct {
 	} `json:"emotes"`
 }
 
-func (c *SevenTVEmoteSet) Size() uintptr {
-	if c == nil {
-		return 0
-	}
+func (c SevenTVEmoteSet) Size() uintptr {
 	var size uintptr
 
-	size += unsafe.Sizeof(*c)
+	size += unsafe.Sizeof(c)
 	for _, e := range c.Emotes {
 		size += e.Data.Size()
 	}
@@ -165,6 +162,19 @@ func (e *SevenTVEmote) GetImage(scale string, format string) (Image, error) {
 	img.URL = url.String()
 
 	return img, nil
+}
+
+func (e *SevenTVEmote) AsEmote() (Emote, error) {
+	img, err := e.GetImage("1x", "WEBP")
+	if err != nil {
+		return Emote{}, err
+	}
+	return Emote{
+		ID: e.ID,
+		Name: e.Name,
+		Images: []Image{img},
+		Locations: []string{},
+	}, err
 }
 
 func (e *SevenTVEmote) Size() uintptr {

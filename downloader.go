@@ -31,6 +31,13 @@ type Image struct {
 	ID     string `json:"id"`
 }
 
+type Emote struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Locations []string `json:"locations"`
+	Images    []Image  `json:"images"`
+}
+
 type emotePath struct {
 	ID    string
 	Scale string
@@ -48,6 +55,7 @@ type DownloaderOptions struct {
 	SevenTV *SevenTVOptions
 }
 
+// Downloads and caches third party emote data as maps indexed by name. 
 type Downloader struct {
 	Options       DownloaderOptions
 	BTTVEmotes    map[string]BTTVEmote
@@ -58,20 +66,25 @@ type Downloader struct {
 func NewDownloader(opt *DownloaderOptions) *Downloader {
 	ed := &Downloader{Options: *opt}
 	ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
-	//ed.FFZEmotes = make(map[string]FFZEmote, 64)
+	ed.FFZEmotes = make(map[string]FFZEmote, 64)
 	ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
 	return ed
 }
 
 // Loads all emote and badge data into memory based on configuration.
-func (ed *Downloader) Load() error {
+// Returns a map of emotes indexed by name.
+func (ed *Downloader) Load() (map[string]Emote, error) {
 	if ed == nil {
-		return errors.New("Nil dereference on Downloader")
+		return nil, errors.New("Nil dereference on Downloader")
 	}
 	var err error
 
+	emotes := make(map[string]Emote, 256)
+
 	errorChan := make(chan error, 8)
 	sevenTVEmotesChan := make(chan SevenTVEmoteSet, 8)
+	bttvEmotesChan := make(chan BTTVEmoteSlice, 8)
+
 	wgdone := make(chan struct{})
 	done := make(chan struct{})
 
@@ -83,21 +96,41 @@ func (ed *Downloader) Load() error {
 				for _, data := range set.Emotes {
 					e := data.Data
 					ed.SevenTVEmotes[e.Name] = e
+					emotes[e.Name], err = e.AsEmote()
+					if err != nil {
+						errorChan <- err
+					}
+				}
+			case es := <-bttvEmotesChan:
+				for _, e := range es {
+					ed.BTTVEmotes[e.Name] = e
+					emotes[e.Name] = e.AsEmote()
 				}
 			case e := <-errorChan:
 				err = errors.Join(e)
 			case <-wgdone:
 				// Collect all buffered errors and emotes when done downloading
 				close(sevenTVEmotesChan)
-				close(errorChan)
-				for e := range errorChan {
-					err = errors.Join(e)
-				}
 				for s := range sevenTVEmotesChan {
 					for _, data := range s.Emotes {
 						e := data.Data
 						ed.SevenTVEmotes[e.Name] = e
+						emotes[e.Name], err = e.AsEmote()
+						if err != nil {
+							errorChan <- err
+						}
 					}
+				}
+				close(bttvEmotesChan)
+				for es := range bttvEmotesChan {
+					for _, e := range es {
+						ed.BTTVEmotes[e.Name] = e
+						emotes[e.Name] = e.AsEmote()
+					}
+				}
+				close(errorChan)
+				for e := range errorChan {
+					err = errors.Join(e)
 				}
 				done <- struct{}{}
 				return
@@ -117,10 +150,7 @@ func (ed *Downloader) Load() error {
 			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting global BTTV emotes", err))
 			return
 		}
-
-		for _, e := range bttvEmotes {
-			ed.BTTVEmotes[e.Name] = e
-		}
+		bttvEmotesChan <- bttvEmotes
 	}()
 
 	wg.Add(1)
@@ -170,5 +200,5 @@ func (ed *Downloader) Load() error {
 	case <-timeout.C:
 	}
 
-	return err
+	return emotes, err
 }
