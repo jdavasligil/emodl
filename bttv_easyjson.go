@@ -17,70 +17,148 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson515ca9ccDecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *BTTVEmoteSlice) {
+func easyjson515ca9ccDecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *BTTVUser) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
 		in.Skip()
-		*out = nil
-	} else {
-		in.Delim('[')
-		if *out == nil {
-			if !in.IsDelim(']') {
-				*out = make(BTTVEmoteSlice, 0, 0)
-			} else {
-				*out = BTTVEmoteSlice{}
-			}
-		} else {
-			*out = (*out)[:0]
-		}
-		for !in.IsDelim(']') {
-			var v1 BTTVEmote
-			easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in, &v1)
-			*out = append(*out, v1)
-			in.WantComma()
-		}
-		in.Delim(']')
+		return
 	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = string(in.String())
+		case "channelEmotes":
+			if in.IsNull() {
+				in.Skip()
+				out.ChannelEmotes = nil
+			} else {
+				in.Delim('[')
+				if out.ChannelEmotes == nil {
+					if !in.IsDelim(']') {
+						out.ChannelEmotes = make([]BTTVEmote, 0, 1)
+					} else {
+						out.ChannelEmotes = []BTTVEmote{}
+					}
+				} else {
+					out.ChannelEmotes = (out.ChannelEmotes)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 BTTVEmote
+					easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in, &v1)
+					out.ChannelEmotes = append(out.ChannelEmotes, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "sharedEmotes":
+			if in.IsNull() {
+				in.Skip()
+				out.SharedEmotes = nil
+			} else {
+				in.Delim('[')
+				if out.SharedEmotes == nil {
+					if !in.IsDelim(']') {
+						out.SharedEmotes = make([]BTTVEmote, 0, 1)
+					} else {
+						out.SharedEmotes = []BTTVEmote{}
+					}
+				} else {
+					out.SharedEmotes = (out.SharedEmotes)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v2 BTTVEmote
+					easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in, &v2)
+					out.SharedEmotes = append(out.SharedEmotes, v2)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
 	if isTopLevel {
 		in.Consumed()
 	}
 }
-func easyjson515ca9ccEncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in BTTVEmoteSlice) {
-	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v2, v3 := range in {
-			if v2 > 0 {
-				out.RawByte(',')
-			}
-			easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out, v3)
-		}
-		out.RawByte(']')
+func easyjson515ca9ccEncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in BTTVUser) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.ID))
 	}
+	{
+		const prefix string = ",\"channelEmotes\":"
+		out.RawString(prefix)
+		if in.ChannelEmotes == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v3, v4 := range in.ChannelEmotes {
+				if v3 > 0 {
+					out.RawByte(',')
+				}
+				easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out, v4)
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"sharedEmotes\":"
+		out.RawString(prefix)
+		if in.SharedEmotes == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.SharedEmotes {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out, v6)
+			}
+			out.RawByte(']')
+		}
+	}
+	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v BTTVEmoteSlice) MarshalJSON() ([]byte, error) {
+func (v BTTVUser) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson515ca9ccEncodeGithubComJdavasligilEmodl(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v BTTVEmoteSlice) MarshalEasyJSON(w *jwriter.Writer) {
+func (v BTTVUser) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson515ca9ccEncodeGithubComJdavasligilEmodl(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *BTTVEmoteSlice) UnmarshalJSON(data []byte) error {
+func (v *BTTVUser) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson515ca9ccDecodeGithubComJdavasligilEmodl(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *BTTVEmoteSlice) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *BTTVUser) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson515ca9ccDecodeGithubComJdavasligilEmodl(l, v)
 }
 func easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *BTTVEmote) {
@@ -106,12 +184,8 @@ func easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *BTT
 			out.ID = string(in.String())
 		case "code":
 			out.Name = string(in.String())
-		case "imageType":
-			out.ImageType = string(in.StringIntern())
 		case "animated":
 			out.Animated = bool(in.Bool())
-		case "userID":
-			out.UserID = string(in.StringIntern())
 		default:
 			in.SkipRecursive()
 		}
@@ -137,19 +211,75 @@ func easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out *jwriter.Writer, in BT
 		out.String(string(in.Name))
 	}
 	{
-		const prefix string = ",\"imageType\":"
-		out.RawString(prefix)
-		out.String(string(in.ImageType))
-	}
-	{
 		const prefix string = ",\"animated\":"
 		out.RawString(prefix)
 		out.Bool(bool(in.Animated))
 	}
-	{
-		const prefix string = ",\"userID\":"
-		out.RawString(prefix)
-		out.String(string(in.UserID))
-	}
 	out.RawByte('}')
+}
+func easyjson515ca9ccDecodeGithubComJdavasligilEmodl2(in *jlexer.Lexer, out *BTTVEmoteSlice) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(BTTVEmoteSlice, 0, 1)
+			} else {
+				*out = BTTVEmoteSlice{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v7 BTTVEmote
+			easyjson515ca9ccDecodeGithubComJdavasligilEmodl1(in, &v7)
+			*out = append(*out, v7)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson515ca9ccEncodeGithubComJdavasligilEmodl2(out *jwriter.Writer, in BTTVEmoteSlice) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v8, v9 := range in {
+			if v8 > 0 {
+				out.RawByte(',')
+			}
+			easyjson515ca9ccEncodeGithubComJdavasligilEmodl1(out, v9)
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v BTTVEmoteSlice) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson515ca9ccEncodeGithubComJdavasligilEmodl2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v BTTVEmoteSlice) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson515ca9ccEncodeGithubComJdavasligilEmodl2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *BTTVEmoteSlice) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson515ca9ccDecodeGithubComJdavasligilEmodl2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *BTTVEmoteSlice) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson515ca9ccDecodeGithubComJdavasligilEmodl2(l, v)
 }

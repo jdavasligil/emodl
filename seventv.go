@@ -170,9 +170,9 @@ func (e *SevenTVEmote) AsEmote() (Emote, error) {
 		return Emote{}, err
 	}
 	return Emote{
-		ID: e.ID,
-		Name: e.Name,
-		Images: []Image{img},
+		ID:        e.ID,
+		Name:      e.Name,
+		Images:    []Image{img},
 		Locations: []string{},
 	}, err
 }
@@ -242,61 +242,13 @@ func get7TVEmoteSet(setid string) (SevenTVEmoteSet, error) {
 	return set, nil
 }
 
-func get7TVUser(uid string) (SevenTVUser, error) {
-	sb := strings.Builder{}
-	u := SevenTVUser{}
-	err := sevenTVPathTmpl.Execute(&sb, sevenTVPath{
-		Version: sevenTVAPIVersion,
-		Path:    "users",
-		Option:  uid,
-	})
-	if err != nil {
-		return u, err
-	}
-
-	req := &http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Scheme: "https",
-			Host:   sevenTVHost,
-			Path:   sb.String(),
-		},
-		Header: http.Header{},
-	}
-
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return u, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		errorMessage := &jsonError{}
-		err = easyjson.UnmarshalFromReader(response.Body, errorMessage)
-		if err != nil {
-			body, err := io.ReadAll(response.Body)
-			if err != nil {
-				return u, err
-			}
-			return u, errors.New(response.Status + "\n" + string(body))
-		}
-		return u, errors.New(errorMessage.Error.Message)
-	}
-
-	err = easyjson.UnmarshalFromReader(response.Body, &u)
-	if err != nil {
-		return u, err
-	}
-	return u, nil
-}
-
-func get7TVPlatformUser(platform string, pid string) (SevenTVUser, error) {
+func get7TVUser(platform string, platformID string) (SevenTVUser, error) {
 	sb := strings.Builder{}
 	u := SevenTVUser{}
 	err := sevenTVPathTmpl.Execute(&sb, sevenTVPath{
 		Version: sevenTVAPIVersion,
 		Path:    "users/" + platform,
-		Option:  pid,
+		Option:  platformID,
 	})
 	if err != nil {
 		return u, err
@@ -337,29 +289,17 @@ func get7TVPlatformUser(platform string, pid string) (SevenTVUser, error) {
 		return u, err
 	}
 	return pu.User, nil
-
 }
 
-func get7TVUserEmoteSetIDs(opt *SevenTVOptions) ([]string, error) {
+func get7TVUserEmoteSetIDs(platform string, platformID string) ([]string, error) {
 	var u SevenTVUser
 	var err error
 
-	if opt == nil {
-		return nil, errors.New("No 7TV options provided.")
-	} else if opt.SevenTVID != "" {
-		u, err = get7TVUser(opt.SevenTVID)
-		if err != nil {
-			return nil, err
-		}
-	} else if opt.Platform != "" && opt.PlatformID != "" {
-		u, err = get7TVPlatformUser(opt.Platform, opt.PlatformID)
-		if err != nil {
-			return nil, err
-		}
-		opt.SevenTVID = u.ID
-	} else {
-		return nil, errors.New("Either provide a 7TV ID or both platform and platform ID.")
+	u, err = get7TVUser(platform, platformID)
+	if err != nil {
+		return []string{}, err
 	}
+
 	ids := make([]string, 0, len(u.EmoteSets))
 	for _, s := range u.EmoteSets {
 		ids = append(ids, s.ID)

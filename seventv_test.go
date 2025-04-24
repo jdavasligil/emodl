@@ -1,6 +1,7 @@
 package emodl
 
 import (
+	"log"
 	"testing"
 )
 
@@ -34,55 +35,40 @@ func TestGet7TVEmoteSet(t *testing.T) {
 
 func TestGet7TVEmoteSetIDs(t *testing.T) {
 	t.Parallel()
-	t.Run("With7TVID", func(t *testing.T) {
-		t.Parallel()
-		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
-			SevenTVID: "01JSG2QHPPEXFXPH65AE1PNMFD",
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(sids) != 1 {
-			t.Fatalf("Emote Set IDs: %v has more than one emote set", sids)
-		}
-		if sids[0] != "01JSG36904T5GM79JJXBVTSFKS" {
-			t.Fatalf("Emote Set ID: %s different from expected %s", sids[0], "01JSG36904T5GM79JJXBVTSFKS")
-		}
-	})
 	t.Run("WithPlatformNoID", func(t *testing.T) {
 		t.Parallel()
-		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
-			Platform: "twitch",
-		})
+		sids, err := get7TVUserEmoteSetIDs("twitch", "")
 		if err == nil {
 			t.Logf("No error with no platform id")
 			t.Fail()
 		}
-		if sids != nil {
-			t.Logf("Emote Set IDs not nil with no platform id")
+		if sids == nil {
+			log.Fatal("Emote Set IDs should never be nil")
+		}
+		if len(sids) != 0 {
+			t.Logf("Emote Set IDs not empty with no platform id")
 			t.Fail()
 		}
 	})
 	t.Run("WithPlatformIDNoPlatform", func(t *testing.T) {
 		t.Parallel()
-		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
-			PlatformID: "1048391821",
-		})
+		sids, err := get7TVUserEmoteSetIDs("", "1048391821")
 		if err == nil {
 			t.Logf("No error with no platform")
 			t.Fail()
 		}
-		if sids != nil {
-			t.Logf("Emote Set IDs not nil with no platform")
+		if sids == nil {
+			t.Logf("Emote Set IDs should never be nil")
+			t.Fail()
+		}
+		if len(sids) != 0 {
+			t.Logf("Emote Set IDs not empty with no platform")
 			t.Fail()
 		}
 	})
 	t.Run("WithPlatformAndPID", func(t *testing.T) {
 		t.Parallel()
-		sids, err := get7TVUserEmoteSetIDs(&SevenTVOptions{
-			Platform:   "twitch",
-			PlatformID: "1048391821",
-		})
+		sids, err := get7TVUserEmoteSetIDs("twitch", "1048391821")
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -12,14 +12,16 @@ package emodl
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"text/template"
 	"time"
 )
 
+const downloadTimeout = 5
+
 var (
-	apiPathTmpl, _   = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
-	emotePathTmpl, _ = template.New("emote").Parse("emote/{{ .ID }}/{{ .Scale }}.{{ .Ext }}")
+	apiPathTmpl, _ = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
 
 	imageFallbacks = [11]string{"WEBP", "AVIF", "APNG", "GIF", "PNG", "JPEG", "JPG", "JFIF", "PJPEG", "PJP", "SVG"}
 )
@@ -50,12 +52,12 @@ type apiPath struct {
 }
 
 type DownloaderOptions struct {
-	BTTV    bool
-	FFZ     bool
+	BTTV    *BTTVOptions
 	SevenTV *SevenTVOptions
+	FFZ     bool
 }
 
-// Downloads and caches third party emote data as maps indexed by name. 
+// Downloads and caches third party emote data as maps indexed by name.
 type Downloader struct {
 	Options       DownloaderOptions
 	BTTVEmotes    map[string]BTTVEmote
@@ -63,8 +65,8 @@ type Downloader struct {
 	SevenTVEmotes map[string]SevenTVEmote
 }
 
-func NewDownloader(opt *DownloaderOptions) *Downloader {
-	ed := &Downloader{Options: *opt}
+func NewDownloader(opt DownloaderOptions) Downloader {
+	ed := Downloader{Options: opt}
 	ed.BTTVEmotes = make(map[string]BTTVEmote, 64)
 	ed.FFZEmotes = make(map[string]FFZEmote, 64)
 	ed.SevenTVEmotes = make(map[string]SevenTVEmote, 64)
@@ -145,9 +147,21 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 	go func() {
 		defer wg.Done()
 
-		bttvEmotes, err := getGlobalBTTVEmotes()
+		bttvEmotes, err := getBTTVGlobalEmotes()
 		if err != nil {
 			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting global BTTV emotes", err))
+			return
+		}
+		bttvEmotesChan <- bttvEmotes
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		bttvEmotes, err := getBTTVUserEmotes(ed.Options.BTTV.Platform, ed.Options.BTTV.PlatformID)
+		if err != nil {
+			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting BTTV user emotes", err))
 			return
 		}
 		bttvEmotesChan <- bttvEmotes
@@ -170,7 +184,7 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 		go func() {
 			defer wg.Done()
 
-			sids, err := get7TVUserEmoteSetIDs(ed.Options.SevenTV)
+			sids, err := get7TVUserEmoteSetIDs(ed.Options.SevenTV.Platform, ed.Options.SevenTV.PlatformID)
 			if err != nil {
 				errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting user 7TV emotes with opt %v", err, *ed.Options.SevenTV))
 				return
@@ -194,10 +208,11 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 	wg.Wait()
 	wgdone <- struct{}{}
 
-	timeout := time.NewTicker(5 * time.Second)
+	timeout := time.NewTicker(downloadTimeout * time.Second)
 	select {
 	case <-done:
 	case <-timeout.C:
+		log.Printf("Timeout after %d seconds.\n", downloadTimeout)
 	}
 
 	return emotes, err
