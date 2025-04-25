@@ -29,7 +29,6 @@ type bttvUserPath struct {
 	PlatformID string
 }
 
-// Either BTTVTVID or Platform/PlatformID are needed to get user emote sets.
 type BTTVOptions struct {
 	// Platform linked to BTTV (twitch, youtube)
 	Platform string

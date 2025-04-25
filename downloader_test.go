@@ -8,6 +8,7 @@ import (
 
 func TestDownloader(t *testing.T) {
 	t.Parallel()
+
 	ed := NewDownloader(DownloaderOptions{
 		BTTV: &BTTVOptions{
 			Platform:   "twitch",
@@ -17,14 +18,18 @@ func TestDownloader(t *testing.T) {
 			Platform:   "twitch",
 			PlatformID: "1048391821",
 		},
-		FFZ: true,
+		FFZ: &FFZOptions{
+			Platform:   "twitch",
+			PlatformID: "39226538",
+		},
 	})
+
 	emotes, err := ed.Load()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if emotes == nil {
-		t.Fatal("Emotes slice is nil")
+		t.Fatal("Emotes map is nil")
 	}
 	if len(ed.BTTVEmotes) == 0 {
 		t.Fatal("BTTVEmotes is empty.")
@@ -33,26 +38,11 @@ func TestDownloader(t *testing.T) {
 		t.Fatal("SevenTVEmotes is empty")
 	}
 	if len(ed.FFZEmotes) == 0 {
-		t.Fatal("SevenTVEmotes is empty")
+		t.Fatal("FFZEmotes is empty")
 	}
-	if len(emotes) != (len(ed.BTTVEmotes) + len(ed.SevenTVEmotes)) {
-		if len(ed.BTTVEmotes) < len(ed.SevenTVEmotes) {
-			for name := range ed.BTTVEmotes {
-				_, ok := ed.SevenTVEmotes[name]
-				if ok {
-					t.Logf("Emote Conflict: [BTTV] [7TV] -> %s", name)
-				}
-			}
-		} else {
-			for name := range ed.SevenTVEmotes {
-				_, ok := ed.BTTVEmotes[name]
-				if ok {
-					t.Logf("Emote Conflict: [BTTV] [7TV] -> %s", name)
-				}
-			}
 
-		}
-	}
+	t.Log(ed.ReportConflicts(emotes))
+
 	var sb strings.Builder
 	sb.WriteString("\nDownloaded:\n")
 	sb.WriteString(fmt.Sprintf("\t7TV:   %d\n", len(ed.SevenTVEmotes)))

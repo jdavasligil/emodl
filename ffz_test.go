@@ -15,9 +15,24 @@ func TestGetFFZEmoteSet(t *testing.T) {
 		t.Log("Sets length is zero")
 		t.Fail()
 	}
-	s, err := prettyPrint(sets)
+	// s, err := prettyPrint(sets)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// t.Log(s)
+}
+
+func TestGetFFZRoomSet(t *testing.T) {
+	set, err := getFFZRoomEmoteSet("twitch", "39226538")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(s)
+	if len(set.Emotes) == 0 {
+		t.Fatal("Emote set is empty")
+	}
+	// s, err := prettyPrint(set)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// t.Log(s)
 }

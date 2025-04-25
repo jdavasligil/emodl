@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
@@ -56,7 +57,7 @@ type emotePath struct {
 type DownloaderOptions struct {
 	BTTV    *BTTVOptions
 	SevenTV *SevenTVOptions
-	FFZ     bool
+	FFZ     *FFZOptions
 }
 
 // Downloads and caches third party emote data as maps indexed by name.
@@ -222,18 +223,29 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 		}()
 	}
 
-	if ed.Options.FFZ {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sets, err := getFFZEmoteSets("global")
+		if err != nil {
+			errorChan <- errors.New(fmt.Sprintf("emodl: %s", err))
+			return
+		}
+		for _, set := range sets {
+			ffzEmotesChan <- set.Emotes
+		}
+	}()
+
+	if ed.Options.FFZ != nil {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			sets, err := getFFZEmoteSets("global")
+			set, err := getFFZRoomEmoteSet(ed.Options.FFZ.Platform, ed.Options.FFZ.PlatformID)
 			if err != nil {
 				errorChan <- errors.New(fmt.Sprintf("emodl: %s", err))
 				return
 			}
-			for _, set := range sets {
-				ffzEmotesChan <- set.Emotes
-			}
+			ffzEmotesChan <- set.Emotes
 		}()
 	}
 
@@ -248,4 +260,58 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 	}
 
 	return emotes, err
+}
+
+// Generate a formatted string reporting emote name conflicts.
+func (ed *Downloader) ReportConflicts(emotes map[string]Emote) string {
+	var sb strings.Builder
+	var count int
+
+	sb.WriteString("Emote Conflicts:\n")
+
+	if len(emotes) != (len(ed.BTTVEmotes) + len(ed.SevenTVEmotes) + len(ed.FFZEmotes)) {
+		if len(ed.BTTVEmotes) < len(ed.SevenTVEmotes) && len(ed.BTTVEmotes) < len(ed.FFZEmotes) {
+			for name := range ed.BTTVEmotes {
+				_, ok := ed.SevenTVEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[BTTV] [7TV] -> %s\n", name))
+					count++
+				}
+				_, ok = ed.FFZEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[BTTV] [FFZ] -> %s\n", name))
+					count++
+				}
+			}
+		} else if len(ed.SevenTVEmotes) < len(ed.BTTVEmotes) && len(ed.SevenTVEmotes) < len(ed.FFZEmotes) {
+			for name := range ed.SevenTVEmotes {
+				_, ok := ed.BTTVEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[7TV] [BTTV] -> %s\n", name))
+					count++
+				}
+				_, ok = ed.FFZEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[7TV] [FFZ] -> %s\n", name))
+					count++
+				}
+			}
+		} else if len(ed.FFZEmotes) < len(ed.SevenTVEmotes) && len(ed.FFZEmotes) < len(ed.BTTVEmotes) {
+			for name := range ed.FFZEmotes {
+				_, ok := ed.BTTVEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[FFZ] [BTTV] -> %s\n", name))
+					count++
+				}
+				_, ok = ed.SevenTVEmotes[name]
+				if ok {
+					sb.WriteString(fmt.Sprintf("\t[FFZ] [7TV] -> %s\n", name))
+					count++
+				}
+			}
+		}
+	}
+	sb.WriteString(fmt.Sprintf("Total Conflicts: %d\n", count))
+
+	return sb.String()
 }

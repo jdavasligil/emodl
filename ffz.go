@@ -22,6 +22,14 @@ var (
 	//ffzUserPathTmpl, _ = template.New("ffzUserPath").Parse("/{{ .Version }}/cached/users/{{ .Platform }}/{{ .PlatformID }}")
 )
 
+type FFZOptions struct {
+	// Platform linked to FFZ (twitch, youtube)
+	Platform string
+
+	// ID associated with Platform (not username)
+	PlatformID string
+}
+
 type FFZEmote struct {
 	ID     int               `json:"id"`
 	Name   string            `json:"name"`
@@ -39,6 +47,14 @@ type FFZEmoteSet struct {
 type FFZEmoteSetResponse struct {
 	DefaultSets []int                  `json:"default_sets"`
 	Sets        map[string]FFZEmoteSet `json:"sets"`
+}
+
+//easyjson:json
+type FFZRoomData struct {
+	Room struct {
+		Set int `json:"set"`
+	} `json:"room"`
+	Sets map[string]FFZEmoteSet `json:"sets"`
 }
 
 // Scale "1", "2", etc. for 1x, 2x, etc. scales.
@@ -91,6 +107,78 @@ func (e FFZEmote) Size() uintptr {
 }
 
 // Get User -> User Emote Sets -> User Emotes
+func getFFZRoomEmoteSet(platform string, platformID string) (FFZEmoteSet, error) {
+	var ffzRoomData FFZRoomData
+	var ffzEmoteSet FFZEmoteSet
+	var path string
+	sb := strings.Builder{}
+	platform = strings.ToLower(platform)
+	if platform == "youtube" || platform == "yt" {
+		path = "room/yt"
+	} else if platform == "twitch" || platform == "ttv" {
+		path = "room/id"
+	}
+	err := apiPathOptionTmpl.Execute(&sb, apiPath{
+		Version: ffzAPIVersion,
+		Path:    path,
+		Option:  platformID,
+	})
+	if err != nil {
+		return ffzEmoteSet, err
+	}
+	req := &http.Request{
+		Method: "GET",
+		URL: &url.URL{
+			Scheme: "https",
+			Host:   ffzHost,
+			Path:   sb.String(),
+		},
+		Header: http.Header{},
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ffzEmoteSet, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		errorMessage := &jsonError{}
+		err = easyjson.UnmarshalFromReader(response.Body, errorMessage)
+		if err != nil {
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				return ffzEmoteSet, err
+			}
+			return ffzEmoteSet, errors.New(response.Status + "\n" + string(body))
+		}
+		return ffzEmoteSet, errors.New(errorMessage.Error.Message)
+	}
+	// DEBUG
+	// body, err := io.ReadAll(response.Body)
+	// if err != nil {
+	// 	return ffzEmoteSet, err
+	// }
+	// fmt.Printf("BODY:\n%s\n", body)
+
+	err = easyjson.UnmarshalFromReader(response.Body, &ffzRoomData)
+	if err != nil {
+		return ffzEmoteSet, err
+	}
+
+	strIdx := strconv.Itoa(ffzRoomData.Room.Set)
+	if strIdx == "" {
+		return ffzEmoteSet, errors.New(fmt.Sprintf("failed to convert set %d to string", ffzRoomData.Room.Set))
+	}
+
+	ffzEmoteSet, ok := ffzRoomData.Sets[strIdx]
+	if !ok {
+		return ffzEmoteSet, errors.New(fmt.Sprintf("FFZ Emote Set ID=%s does not exist", strIdx))
+	}
+
+	return ffzEmoteSet, nil
+}
+
 func getFFZEmoteSets(setID string) ([]FFZEmoteSet, error) {
 	var ffzEmoteSetResponse FFZEmoteSetResponse
 	var ffzEmoteSets []FFZEmoteSet
@@ -149,7 +237,11 @@ func getFFZEmoteSets(setID string) ([]FFZEmoteSet, error) {
 		if strIdx == "" {
 			return ffzEmoteSets, errors.New(fmt.Sprintf("failed to convert index %d to string", idx))
 		}
-		ffzEmoteSets = append(ffzEmoteSets, ffzEmoteSetResponse.Sets[strIdx])
+		if set, ok := ffzEmoteSetResponse.Sets[strIdx]; ok {
+			ffzEmoteSets = append(ffzEmoteSets, set)
+		} else {
+			return ffzEmoteSets, errors.New(fmt.Sprintf("FFZ Emote Set ID=%s does not exist", strIdx))
+		}
 	}
 
 	return ffzEmoteSets, nil

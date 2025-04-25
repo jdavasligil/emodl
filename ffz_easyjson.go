@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson1d9e6730DecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *FFZEmoteSetResponse) {
+func easyjson1d9e6730DecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *FFZRoomData) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -36,29 +36,8 @@ func easyjson1d9e6730DecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *FFZE
 			continue
 		}
 		switch key {
-		case "default_sets":
-			if in.IsNull() {
-				in.Skip()
-				out.DefaultSets = nil
-			} else {
-				in.Delim('[')
-				if out.DefaultSets == nil {
-					if !in.IsDelim(']') {
-						out.DefaultSets = make([]int, 0, 8)
-					} else {
-						out.DefaultSets = []int{}
-					}
-				} else {
-					out.DefaultSets = (out.DefaultSets)[:0]
-				}
-				for !in.IsDelim(']') {
-					var v1 int
-					v1 = int(in.Int())
-					out.DefaultSets = append(out.DefaultSets, v1)
-					in.WantComma()
-				}
-				in.Delim(']')
-			}
+		case "room":
+			easyjson1d9e6730Decode(in, &out.Room)
 		case "sets":
 			if in.IsNull() {
 				in.Skip()
@@ -68,9 +47,9 @@ func easyjson1d9e6730DecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *FFZE
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v2 FFZEmoteSet
-					easyjson1d9e6730DecodeGithubComJdavasligilEmodl1(in, &v2)
-					(out.Sets)[key] = v2
+					var v1 FFZEmoteSet
+					easyjson1d9e6730DecodeGithubComJdavasligilEmodl1(in, &v1)
+					(out.Sets)[key] = v1
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -85,25 +64,14 @@ func easyjson1d9e6730DecodeGithubComJdavasligilEmodl(in *jlexer.Lexer, out *FFZE
 		in.Consumed()
 	}
 }
-func easyjson1d9e6730EncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in FFZEmoteSetResponse) {
+func easyjson1d9e6730EncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in FFZRoomData) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"default_sets\":"
+		const prefix string = ",\"room\":"
 		out.RawString(prefix[1:])
-		if in.DefaultSets == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v3, v4 := range in.DefaultSets {
-				if v3 > 0 {
-					out.RawByte(',')
-				}
-				out.Int(int(v4))
-			}
-			out.RawByte(']')
-		}
+		easyjson1d9e6730Encode(out, in.Room)
 	}
 	{
 		const prefix string = ",\"sets\":"
@@ -112,16 +80,16 @@ func easyjson1d9e6730EncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in FFZ
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v5First := true
-			for v5Name, v5Value := range in.Sets {
-				if v5First {
-					v5First = false
+			v2First := true
+			for v2Name, v2Value := range in.Sets {
+				if v2First {
+					v2First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v5Name))
+				out.String(string(v2Name))
 				out.RawByte(':')
-				easyjson1d9e6730EncodeGithubComJdavasligilEmodl1(out, v5Value)
+				easyjson1d9e6730EncodeGithubComJdavasligilEmodl1(out, v2Value)
 			}
 			out.RawByte('}')
 		}
@@ -130,26 +98,26 @@ func easyjson1d9e6730EncodeGithubComJdavasligilEmodl(out *jwriter.Writer, in FFZ
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v FFZEmoteSetResponse) MarshalJSON() ([]byte, error) {
+func (v FFZRoomData) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson1d9e6730EncodeGithubComJdavasligilEmodl(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v FFZEmoteSetResponse) MarshalEasyJSON(w *jwriter.Writer) {
+func (v FFZRoomData) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson1d9e6730EncodeGithubComJdavasligilEmodl(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *FFZEmoteSetResponse) UnmarshalJSON(data []byte) error {
+func (v *FFZRoomData) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson1d9e6730DecodeGithubComJdavasligilEmodl(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *FFZEmoteSetResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *FFZRoomData) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson1d9e6730DecodeGithubComJdavasligilEmodl(l, v)
 }
 func easyjson1d9e6730DecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *FFZEmoteSet) {
@@ -189,9 +157,9 @@ func easyjson1d9e6730DecodeGithubComJdavasligilEmodl1(in *jlexer.Lexer, out *FFZ
 					out.Emotes = (out.Emotes)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v6 FFZEmote
-					easyjson1d9e6730DecodeGithubComJdavasligilEmodl2(in, &v6)
-					out.Emotes = append(out.Emotes, v6)
+					var v3 FFZEmote
+					easyjson1d9e6730DecodeGithubComJdavasligilEmodl2(in, &v3)
+					out.Emotes = append(out.Emotes, v3)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -222,11 +190,11 @@ func easyjson1d9e6730EncodeGithubComJdavasligilEmodl1(out *jwriter.Writer, in FF
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v7, v8 := range in.Emotes {
-				if v7 > 0 {
+			for v4, v5 := range in.Emotes {
+				if v4 > 0 {
 					out.RawByte(',')
 				}
-				easyjson1d9e6730EncodeGithubComJdavasligilEmodl2(out, v8)
+				easyjson1d9e6730EncodeGithubComJdavasligilEmodl2(out, v5)
 			}
 			out.RawByte(']')
 		}
@@ -269,9 +237,9 @@ func easyjson1d9e6730DecodeGithubComJdavasligilEmodl2(in *jlexer.Lexer, out *FFZ
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v9 string
-					v9 = string(in.String())
-					(out.URLs)[key] = v9
+					var v6 string
+					v6 = string(in.String())
+					(out.URLs)[key] = v6
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -317,19 +285,200 @@ func easyjson1d9e6730EncodeGithubComJdavasligilEmodl2(out *jwriter.Writer, in FF
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v10First := true
-			for v10Name, v10Value := range in.URLs {
-				if v10First {
-					v10First = false
+			v7First := true
+			for v7Name, v7Value := range in.URLs {
+				if v7First {
+					v7First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v10Name))
+				out.String(string(v7Name))
 				out.RawByte(':')
-				out.String(string(v10Value))
+				out.String(string(v7Value))
 			}
 			out.RawByte('}')
 		}
 	}
 	out.RawByte('}')
+}
+func easyjson1d9e6730Decode(in *jlexer.Lexer, out *struct {
+	Set int `json:"set"`
+}) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "set":
+			out.Set = int(in.Int())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson1d9e6730Encode(out *jwriter.Writer, in struct {
+	Set int `json:"set"`
+}) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"set\":"
+		out.RawString(prefix[1:])
+		out.Int(int(in.Set))
+	}
+	out.RawByte('}')
+}
+func easyjson1d9e6730DecodeGithubComJdavasligilEmodl3(in *jlexer.Lexer, out *FFZEmoteSetResponse) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "default_sets":
+			if in.IsNull() {
+				in.Skip()
+				out.DefaultSets = nil
+			} else {
+				in.Delim('[')
+				if out.DefaultSets == nil {
+					if !in.IsDelim(']') {
+						out.DefaultSets = make([]int, 0, 8)
+					} else {
+						out.DefaultSets = []int{}
+					}
+				} else {
+					out.DefaultSets = (out.DefaultSets)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v8 int
+					v8 = int(in.Int())
+					out.DefaultSets = append(out.DefaultSets, v8)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
+		case "sets":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				out.Sets = make(map[string]FFZEmoteSet)
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v9 FFZEmoteSet
+					easyjson1d9e6730DecodeGithubComJdavasligilEmodl1(in, &v9)
+					(out.Sets)[key] = v9
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson1d9e6730EncodeGithubComJdavasligilEmodl3(out *jwriter.Writer, in FFZEmoteSetResponse) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"default_sets\":"
+		out.RawString(prefix[1:])
+		if in.DefaultSets == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v10, v11 := range in.DefaultSets {
+				if v10 > 0 {
+					out.RawByte(',')
+				}
+				out.Int(int(v11))
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"sets\":"
+		out.RawString(prefix)
+		if in.Sets == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
+			out.RawString(`null`)
+		} else {
+			out.RawByte('{')
+			v12First := true
+			for v12Name, v12Value := range in.Sets {
+				if v12First {
+					v12First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v12Name))
+				out.RawByte(':')
+				easyjson1d9e6730EncodeGithubComJdavasligilEmodl1(out, v12Value)
+			}
+			out.RawByte('}')
+		}
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v FFZEmoteSetResponse) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson1d9e6730EncodeGithubComJdavasligilEmodl3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v FFZEmoteSetResponse) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson1d9e6730EncodeGithubComJdavasligilEmodl3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *FFZEmoteSetResponse) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson1d9e6730DecodeGithubComJdavasligilEmodl3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *FFZEmoteSetResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson1d9e6730DecodeGithubComJdavasligilEmodl3(l, v)
 }
