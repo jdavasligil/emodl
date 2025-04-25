@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"text/template"
 	"unsafe"
 
 	"github.com/mailru/easyjson"
@@ -23,15 +22,7 @@ import (
 var (
 	sevenTVAPIVersion = "v3"
 	sevenTVHost       = "7tv.io"
-
-	sevenTVPathTmpl, _ = template.New("sevenTVPath").Parse("/{{ .Version }}/{{ .Path }}/{{ .Option }}")
 )
-
-type sevenTVPath struct {
-	Version string
-	Path    string
-	Option  string
-}
 
 // Either SevenTVID or Platform/PlatformID are needed to get user emote sets.
 type SevenTVOptions struct {
@@ -195,7 +186,7 @@ func (e *SevenTVEmote) Size() uintptr {
 func get7TVEmoteSet(setid string) (SevenTVEmoteSet, error) {
 	sb := strings.Builder{}
 	set := SevenTVEmoteSet{}
-	err := sevenTVPathTmpl.Execute(&sb, sevenTVPath{
+	err := apiPathOptionTmpl.Execute(&sb, apiPath{
 		Version: sevenTVAPIVersion,
 		Path:    "emote-sets",
 		Option:  setid,
@@ -245,7 +236,7 @@ func get7TVEmoteSet(setid string) (SevenTVEmoteSet, error) {
 func get7TVUser(platform string, platformID string) (SevenTVUser, error) {
 	sb := strings.Builder{}
 	u := SevenTVUser{}
-	err := sevenTVPathTmpl.Execute(&sb, sevenTVPath{
+	err := apiPathOptionTmpl.Execute(&sb, apiPath{
 		Version: sevenTVAPIVersion,
 		Path:    "users/" + platform,
 		Option:  platformID,

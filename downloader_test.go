@@ -1,6 +1,8 @@
 package emodl
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -15,6 +17,7 @@ func TestDownloader(t *testing.T) {
 			Platform:   "twitch",
 			PlatformID: "1048391821",
 		},
+		FFZ: true,
 	})
 	emotes, err := ed.Load()
 	if err != nil {
@@ -27,6 +30,9 @@ func TestDownloader(t *testing.T) {
 		t.Fatal("BTTVEmotes is empty.")
 	}
 	if len(ed.SevenTVEmotes) == 0 {
+		t.Fatal("SevenTVEmotes is empty")
+	}
+	if len(ed.FFZEmotes) == 0 {
 		t.Fatal("SevenTVEmotes is empty")
 	}
 	if len(emotes) != (len(ed.BTTVEmotes) + len(ed.SevenTVEmotes)) {
@@ -47,7 +53,13 @@ func TestDownloader(t *testing.T) {
 
 		}
 	}
-	t.Logf("\nDownloaded:\n\t%d Emotes from 7TV\n\t%d Emotes from BTTV\n\t%d Emotes Total\n", len(ed.SevenTVEmotes), len(ed.BTTVEmotes), len(emotes))
+	var sb strings.Builder
+	sb.WriteString("\nDownloaded:\n")
+	sb.WriteString(fmt.Sprintf("\t7TV:   %d\n", len(ed.SevenTVEmotes)))
+	sb.WriteString(fmt.Sprintf("\tBTTV:  %d\n", len(ed.BTTVEmotes)))
+	sb.WriteString(fmt.Sprintf("\tFFZ:   %d\n", len(ed.FFZEmotes)))
+	sb.WriteString(fmt.Sprintf("\tTotal: %d\n", len(ed.FFZEmotes)+len(ed.SevenTVEmotes)+len(ed.BTTVEmotes)))
+	t.Log(sb.String())
 	//s, err := prettyPrint(emotes)
 	//if err != nil {
 	//	t.Fatal(err)

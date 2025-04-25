@@ -21,10 +21,17 @@ import (
 const downloadTimeout = 5
 
 var (
-	apiPathTmpl, _ = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
+	apiPathTmpl, _       = template.New("api").Parse("/{{ .Version }}/{{ .Path }}")
+	apiPathOptionTmpl, _ = template.New("apiPathOption").Parse("/{{ .Version }}/{{ .Path }}/{{ .Option }}")
 
 	imageFallbacks = [11]string{"WEBP", "AVIF", "APNG", "GIF", "PNG", "JPEG", "JPG", "JFIF", "PJPEG", "PJP", "SVG"}
 )
+
+type apiPath struct {
+	Version string
+	Path    string
+	Option  string
+}
 
 type Image struct {
 	URL    string `json:"url"`
@@ -44,11 +51,6 @@ type emotePath struct {
 	ID    string
 	Scale string
 	Ext   string
-}
-
-type apiPath struct {
-	Version string
-	Path    string
 }
 
 type DownloaderOptions struct {
@@ -86,6 +88,7 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 	errorChan := make(chan error, 8)
 	sevenTVEmotesChan := make(chan SevenTVEmoteSet, 8)
 	bttvEmotesChan := make(chan BTTVEmoteSlice, 8)
+	ffzEmotesChan := make(chan []FFZEmote, 8)
 
 	wgdone := make(chan struct{})
 	done := make(chan struct{})
@@ -108,6 +111,11 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 					ed.BTTVEmotes[e.Name] = e
 					emotes[e.Name] = e.AsEmote()
 				}
+			case es := <-ffzEmotesChan:
+				for _, e := range es {
+					ed.FFZEmotes[e.Name] = e
+					emotes[e.Name] = e.AsEmote()
+				}
 			case e := <-errorChan:
 				err = errors.Join(e)
 			case <-wgdone:
@@ -127,6 +135,13 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 				for es := range bttvEmotesChan {
 					for _, e := range es {
 						ed.BTTVEmotes[e.Name] = e
+						emotes[e.Name] = e.AsEmote()
+					}
+				}
+				close(ffzEmotesChan)
+				for es := range ffzEmotesChan {
+					for _, e := range es {
+						ed.FFZEmotes[e.Name] = e
 						emotes[e.Name] = e.AsEmote()
 					}
 				}
@@ -155,17 +170,19 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 		bttvEmotesChan <- bttvEmotes
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	if ed.Options.BTTV != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		bttvEmotes, err := getBTTVUserEmotes(ed.Options.BTTV.Platform, ed.Options.BTTV.PlatformID)
-		if err != nil {
-			errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting BTTV user emotes", err))
-			return
-		}
-		bttvEmotesChan <- bttvEmotes
-	}()
+			bttvEmotes, err := getBTTVUserEmotes(ed.Options.BTTV.Platform, ed.Options.BTTV.PlatformID)
+			if err != nil {
+				errorChan <- errors.New(fmt.Sprintf("emodl: %v: failure getting BTTV user emotes", err))
+				return
+			}
+			bttvEmotesChan <- bttvEmotes
+		}()
+	}
 
 	wg.Add(1)
 	go func() {
@@ -201,6 +218,21 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 					}
 					sevenTVEmotesChan <- s
 				}()
+			}
+		}()
+	}
+
+	if ed.Options.FFZ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sets, err := getFFZEmoteSets("global")
+			if err != nil {
+				errorChan <- errors.New(fmt.Sprintf("emodl: %s", err))
+				return
+			}
+			for _, set := range sets {
+				ffzEmotesChan <- set.Emotes
 			}
 		}()
 	}

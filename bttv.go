@@ -20,7 +20,7 @@ var (
 	bttvAPIVersion      = "3"
 	bttvHost            = "api.betterttv.net"
 	bttvCDNPathTmpl, _  = template.New("bttvCDN").Parse("https://cdn.betterttv.net/emote/{{ .ID }}/1x.webp")
-	bttvUserPathTmpl, _ = template.New("bttvCDN").Parse("/{{ .Version }}/cached/users/{{ .Platform }}/{{ .PlatformID }}")
+	bttvUserPathTmpl, _ = template.New("bttvUserPath").Parse("/{{ .Version }}/cached/users/{{ .Platform }}/{{ .PlatformID }}")
 )
 
 type bttvUserPath struct {
@@ -167,7 +167,7 @@ func getBTTVGlobalEmotes() (BTTVEmoteSlice, error) {
 	sb := strings.Builder{}
 	err := apiPathTmpl.Execute(&sb, apiPath{
 		Version: bttvAPIVersion,
-		Path:    "/cached/emotes/global",
+		Path:    "cached/emotes/global",
 	})
 	if err != nil {
 		return bttvEmotes, err
