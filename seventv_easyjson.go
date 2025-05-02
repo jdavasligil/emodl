@@ -270,10 +270,12 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(in *jlexer.Lexer, out *Sev
 				if out.Emotes == nil {
 					if !in.IsDelim(']') {
 						out.Emotes = make([]struct {
+							Name string       `json:"name"`
 							Data SevenTVEmote `json:"data"`
 						}, 0, 0)
 					} else {
 						out.Emotes = []struct {
+							Name string       `json:"name"`
 							Data SevenTVEmote `json:"data"`
 						}{}
 					}
@@ -282,6 +284,7 @@ func easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(in *jlexer.Lexer, out *Sev
 				}
 				for !in.IsDelim(']') {
 					var v4 struct {
+						Name string       `json:"name"`
 						Data SevenTVEmote `json:"data"`
 					}
 					easyjson2d7cdb3fDecode1(in, &v4)
@@ -352,6 +355,7 @@ func (v *SevenTVEmoteSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl2(l, v)
 }
 func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
+	Name string       `json:"name"`
 	Data SevenTVEmote `json:"data"`
 }) {
 	isTopLevel := in.IsStart()
@@ -372,6 +376,8 @@ func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 			continue
 		}
 		switch key {
+		case "name":
+			out.Name = string(in.String())
 		case "data":
 			easyjson2d7cdb3fDecodeGithubComJdavasligilEmodl3(in, &out.Data)
 		default:
@@ -385,14 +391,20 @@ func easyjson2d7cdb3fDecode1(in *jlexer.Lexer, out *struct {
 	}
 }
 func easyjson2d7cdb3fEncode1(out *jwriter.Writer, in struct {
+	Name string       `json:"name"`
 	Data SevenTVEmote `json:"data"`
 }) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"data\":"
+		const prefix string = ",\"name\":"
 		out.RawString(prefix[1:])
+		out.String(string(in.Name))
+	}
+	{
+		const prefix string = ",\"data\":"
+		out.RawString(prefix)
 		easyjson2d7cdb3fEncodeGithubComJdavasligilEmodl3(out, in.Data)
 	}
 	out.RawByte('}')
