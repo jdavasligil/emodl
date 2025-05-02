@@ -53,6 +53,7 @@ type SevenTVPlatformUser struct {
 type SevenTVEmoteSet struct {
 	Name   string `json:"name"`
 	Emotes []struct {
+		Name string       `json:"name"`
 		Data SevenTVEmote `json:"data"`
 	} `json:"emotes"`
 }

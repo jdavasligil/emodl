@@ -101,6 +101,7 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 			case set := <-sevenTVEmotesChan:
 				for _, data := range set.Emotes {
 					e := data.Data
+					e.Name = data.Name
 					ed.SevenTVEmotes[e.Name] = e
 					emotes[e.Name], err = e.AsEmote()
 					if err != nil {
@@ -125,6 +126,7 @@ func (ed *Downloader) Load() (map[string]Emote, error) {
 				for s := range sevenTVEmotesChan {
 					for _, data := range s.Emotes {
 						e := data.Data
+						e.Name = data.Name
 						ed.SevenTVEmotes[e.Name] = e
 						emotes[e.Name], err = e.AsEmote()
 						if err != nil {
